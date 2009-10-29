@@ -1,0 +1,24 @@
+.x {height:1%;}
+img{-ms-interpolation-mode: bicubic;}
+/* IE6 css fixer v0.6: Thu, 22 Oct 2009 13:24:31 +0200 */
+
+/* ============================================= */
+/* safe settings                                 */
+
+/* add display:inline to floated elements */
+#pages li,
+.post-content blockquote,
+img.avatar,
+p.full-width-caption,
+p#foo {display:inline;}
+
+/* add zoom:1 to overflow:hidden */
+#pages,
+#content,
+.post,.comments,
+#footer {zoom:1;}
+
+/* fix negative margins */
+.post-content blockquote,
+img.full-width,
+p.full-width-caption {position:relative; zoom:1;}

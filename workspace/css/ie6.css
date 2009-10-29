@@ -1,0 +1,30 @@
+.x {height:1%;}
+/* IE6 css fixer v0.6: Thu, 22 Oct 2009 13:05:13 +0200 */
+
+/* ============================================= */
+/* safe settings                                 */
+
+/* add display:inline to floated elements */
+#pages li,
+.post-content blockquote,
+img.avatar,
+p.full-width-caption,
+p#foo {display:inline;}
+
+/* add zoom:1 to overflow:hidden */
+#pages,
+#content,
+.post,.comments,
+#footer {zoom:1;}
+
+/* fix negative margins */
+.post-content blockquote,
+img.full-width,
+p.full-width-caption {position:relative; zoom:1;}
+
+.col{margin-right:1.2em !important;}
+.post-meta{position:absolute;}
+.archives .col{float:none!important;margin-bottom:2em;}
+.archives .col h3{padding:0;margin:0;}
+.archives ul li ul li{font-size:1em;}
+#twitter blockquote p{position:relative;text-indent:0;}

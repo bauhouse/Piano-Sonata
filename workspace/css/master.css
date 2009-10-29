@@ -1,0 +1,486 @@
+/*
+	Description: Experimental Master Stylesheet
+	Media: Screen
+	Version: Jun 30 2009
+	Author: Rodrigo Galindez
+	Author URI: http://www.rodrigogalindez.com
+*/
+
+@import url(grid-1080.css);
+
+/*
+Copyright (c) 2009, Yahoo! Inc. All rights reserved.
+Code licensed under the BSD License:
+http://developer.yahoo.net/yui/license.txt
+version: 2.7.0
+*/
+html{color:#000;background:#FFF;}body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input,button,textarea,p,blockquote,th,td{margin:0;padding:0;}table{border-collapse:collapse;border-spacing:0;}fieldset,img{border:0;}address,caption,cite,code,dfn,em,strong,th,var,optgroup{font-style:inherit;font-weight:inherit;}del,ins{text-decoration:none;}li{list-style:none;}caption,th{text-align:left;}h1,h2,h3,h4,h5,h6{font-size:100%;font-weight:normal;}q:before,q:after{content:'';}abbr,acronym{border:0;font-variant:normal;}sup{vertical-align:baseline;}sub{vertical-align:baseline;}legend{color:#000;}input,button,textarea,select,optgroup,option{font-family:inherit;font-size:inherit;font-style:inherit;font-weight:inherit;}input,button,textarea,select{*font-size:100%;}
+
+
+/* -------------------------------- [ General Elements ] */
+
+body {
+	font-family: Helvetica, Arial, Verdana, sans-serif;
+	font-size: 62.5%;
+/*	background: transparent url(../images/grid-1080.gif) repeat-y top center; */
+/*	background-color: #fff;*/
+	color: #333;
+}
+
+hr {
+	display: none;
+}
+
+img {
+	vertical-align: middle;
+}
+h1,h2,h3,h4,h5{font-weight:700}
+h1 {
+	margin-bottom: .3em;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-size: 4.6em;
+	line-height: .95em;
+}
+
+h2 {
+	padding-left: 8px;
+	padding-right: 8px;
+	font-size: 3em;
+	line-height: 1.3;
+}
+
+h3 {
+	margin-bottom: 1.5em;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-size:1.3em;
+}
+
+h4 {
+	margin-bottom: .8em;
+	font-size: 1.3em;
+	line-height: 1.6;
+}
+
+h5 {
+	margin-bottom: 1em;
+	padding-left: 8px;
+	padding-right: 8px;	
+	font-size: 1.2em;
+	line-height: 1.6;
+}
+
+p {
+	margin-bottom: 1em;
+	padding-left: 8px;
+	padding-right: 8px;
+	font-size: 1.2em;
+	line-height: 1.7;
+}
+
+a {
+	text-decoration: none;
+	font-weight: bold;
+	color: #000;
+}
+
+a:hover {
+	color: #0F83DB;
+}
+
+acronym {
+	border-bottom: 1px dotted #eee;
+}
+
+kbd {
+	font-family: "Monaco", "Courier New", fixed;
+	font-size: 1em;
+	text-transform: uppercase;
+}
+
+input.text {
+	padding: .4em;
+	font-family: Helvetica, Arial, Verdana, sans-serif;
+	font-size: 1.2em;
+}
+
+#wrapper {
+	margin: 0 auto;
+	margin-top: 4em;
+}
+
+#header {
+	margin: 0 0 1.2em 0;
+	padding: 2.5em 0;
+	border-bottom: 1px solid #111;
+	border-top: 1px solid #111;
+	color: #111;
+}
+
+#pages {
+	margin: 0 0 .5em 0;
+	padding: 0 8px;
+	overflow: hidden;
+}
+
+#pages ul {
+	list-style-type: none;
+}
+
+#pages li {
+	margin: 0 2.4em 0 0;
+	font-size: 1.4em;
+	line-height: 1.65;
+	float: left;
+}
+
+#content {
+	clear: both;
+	overflow: hidden;
+}
+
+.post,
+.comments {
+	margin: 0 0 0 0;
+	padding: 1.3em 0 2em 0;
+	border-top: 1px solid #ddd;
+	overflow: hidden;
+}
+.comments {
+	border-top-color:#000;
+}
+.post-meta {
+	text-align: right;
+}
+
+.post-content h3 {
+	margin-bottom: .4em;
+	font-size: 2.4em;
+	line-height: 1.3;
+}
+
+.post-content h5 {
+	margin-top: 2em;
+	font-size: 1.7em;
+	line-height: 1.4;
+}
+
+.post-content p {
+	width: 43em;
+}
+
+.post-content div.half-size {
+	width: 62em;
+}
+
+.post-content ul {
+	margin-bottom: 1em;
+	padding: 0 8px;
+}
+
+.post-content li {
+	margin-bottom: .5em;
+	font-size: 1.4em;
+	line-height: 1.65;
+	list-style-type:disc;
+}
+
+.post-content blockquote {
+	margin-left: -18.4em;
+	margin-right: 2em;
+	margin-top: 1em;
+	margin-bottom: 2em;
+	padding-top: 1.5em;
+	border-top: 1px solid #ccc;
+	border-bottom: 1px solid #ccc;
+	float: left;
+}
+
+.post-content blockquote p:before, .post-content blockquote p:after {
+	font-size: 1.6em;
+	vertical-align: middle;
+	content: '"';
+}
+
+.post-content blockquote p {
+	width: 14em;
+	margin-bottom: .8em;
+	font-family: "Palatino", Georgia, "Times New Roman", serif;
+	font-size: 1.6em;
+	font-style: italic;
+	line-height: 1.5;
+	text-indent: -.6em;
+}
+
+.post-meta span {
+	display: block;
+	padding: 0 8px .3em 8px;
+	font-size: 2.4em;
+	line-height: 1.3;
+	color: #111;
+	font-weight: bold;
+	border-bottom: 1px solid #ddd;
+	color: #111;
+}
+
+.post-meta ul {
+	list-style-type: none;
+}
+
+.post-meta li {
+	padding: .5em 8px;
+	font-size: 1.3em;
+	line-height: 1.5;
+	border-bottom: 1px solid #ddd;
+}
+
+.post p {
+	font-size: 1.4em;
+	line-height: 1.65;
+}
+
+.section {
+	margin: 0 0 4em 0;
+}
+
+.section ul {
+	list-style-type: none;
+}
+
+.section li {
+	padding: .5em 8px;
+	font-size: 1.2em;
+	line-height: 1.6;
+	border-bottom: 1px solid #ddd;
+}
+
+.section h3, h4 {
+	padding: 0 8px;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
+	font-size: 1.2em;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	line-height: 1.4;
+}
+
+.section h3 {
+	margin-bottom: 1em;
+	padding-bottom: .8em;
+	border-bottom: 1px solid #ddd;
+}
+
+#about h3, #search h3 {
+	margin-bottom: 1.4em;
+}
+
+#tags {
+	padding: 0 8px;
+}
+
+#tags a {
+	padding-right: .5em;
+	font-size: 1.2em;
+	line-height: 1.7;
+}
+
+span.amp {
+	font-family: Baskerville, Georgia, "Times New Roman", sans-serif;
+	font-style: italic;
+	font-weight: normal;
+	text-transform: lowercase;
+	color: #999;
+}
+
+span.by {
+	font-family: "Palatino", Georgia, "Times New Roman", serif;
+	font-style: italic;
+	text-transform: lowercase;
+	color: #999;
+}
+
+img.centered {
+	display: block;
+	margin: 0 auto;
+	margin-bottom: 1em;
+}
+
+p.meta {
+	margin-bottom: 1em;
+	font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, sans-serif;
+	font-size: 1.2em;
+	font-weight: bold;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+}
+
+p.meta em {
+	font-family: "Palatino", Georgia, "Times New Roman", serif;
+	font-style: italic;
+	text-transform: lowercase;
+	font-weight: normal;
+}
+
+img.avatar {
+	width: 60px;
+	height: 68px;
+	border: 6px solid #eee;
+	margin-right: 12px;
+	margin-bottom: 2px;
+	float: left;
+}
+
+#twitter blockquote p {
+	padding: 0;
+	font-family: "Palatino", Georgia, "Times New Roman", serif;
+	font-size: 1.4em;
+	font-style: italic;
+	line-height: 1.3;
+	text-indent: -.6em;
+}
+
+#twitter blockquote p:before, #twitter blockquote p:after {
+	font-size: 1.4em;
+	vertical-align: middle;
+	content: '"';
+}
+
+#footer {
+	height: 5.4em;
+	padding: 1.5em 0 0 0;
+	margin-bottom: 2em;
+	border-top: 1px solid #111;
+	border-bottom: 1px solid #111;
+	clear: both;
+	overflow: hidden;
+	margin-top:2em;
+}
+
+#footer p {
+	margin-bottom: 0;
+	font-size: 1.2em;
+}
+
+img.full-width {
+	display: block;
+	margin-left: -18.4em;
+	margin-bottom: 2em;
+}
+
+p.full-width-caption {
+	width: 11.2em;
+	margin-left: -14.4em;
+	font-size: 1.3em;
+	font-style: italic;
+	color: #999;
+	float: left;
+}
+
+div.half-size p.caption {
+	font-size: 1.3em;
+	font-style: italic;
+	text-align: center;
+	color: #999;
+}
+
+p#foo {
+	margin-top: .13em;
+	font-size: 4.6em;
+	font-weight: bold;
+	color: #111;
+	float: right;
+}
+
+p#foo em {
+	font-family: "Palatino", Georgia, "Times New Roman", serif;
+	font-style: italic;
+	color: #999;
+}
+/*
+	Description: Symphony Stylesheet
+	Media: Screen
+	Version: Sep 3 2009
+	Author: Fazal Khan
+	Author URI: http://www.fazalkhan.co.uk
+*/
+#header h2{	margin-bottom: 2.5em;}
+.script{
+font-family: "Palatino", Georgia, "Times New Roman", serif;
+font-size: 2em;
+font-style: italic;
+line-height: 1.5;
+color:#999;
+font-weight:400;
+}
+/*forms*/
+.form-row{
+	padding-bottom:1em;
+	margin-bottom:1em;
+	border-bottom:1px dotted #bbb;
+}
+.form-row.last{
+	border:none;
+}
+.form-row .span-2{
+	text-align:right;
+}
+.form-row label{
+	font-weight:700;
+	font-size:1.3em;
+	line-height:1.5;
+	color:#000;
+}
+.form-row textarea{
+	width:578px;
+	padding:4px;
+}
+input.text,
+textarea{
+	border-width:1px;
+	border-style:solid;
+	border-top-color:#aaadb2;
+	border-right-color:#dbe0e6;
+	border-bottom-color:#e2e9ef;
+	border-left-color:#e2e4ea;
+	outline:none;
+}
+textarea{font-size:1.3em;}
+/*comments*/
+.comment{margin-bottom:1em;padding:1em;border-top:1px dotted #ddd;}
+.comment dt{text-align:right;}
+.comment dt a{font-size:1.3em;line-height:1.5em;display:block;}
+.comment dt em{font-size:1.2em;}
+.comment dd p{padding:0;}
+
+.make-comment{border-top:1px solid #000;padding-top:1.5em;margin-top:1em;}
+.make-message{border-top:1px dotted #ddd;padding-top:.5em;margin-top:1em;}
+p.error{color:#ff0000;}
+/**/
+.archives{border-top:1px dotted #ddd;padding-top:1em;}
+.archives li{font-size:1.3em;padding-bottom:.5em;margin-bottom:.5em;border-bottom:1px dotted #ddd;}
+
+.span-9.copy{margin:4em 0 2em 0;	padding:1em 0 1.5em;border-top:1px dotted #ddd;border-bottom:1px solid #000;}
+.span-9.copy p{
+	font-size:1.4em;
+}
+.b-t{border-top:1px solid #ddd;padding-top:10px;}
+.b-r{border-right:1px solid #ddd;}
+.b-b{border-bottom:1px solid #ddd;padding-bottom:10px;}
+.b-l{border-left:1px solid #ddd;}
+button#submit{
+	outline:none;
+	border:1px solid #ddd;
+	background:#fff;
+	font-family:"Lucida Grande","Lucida Sans Unicode",Verdana,sans-serif;
+	text-transform:uppercase;
+	font-weight:700;
+	padding:10px 30px;
+	background:#fff url(../images/bg_button.png) 11px 11px no-repeat;
+}
+/*@group Fixes*/
+.x:after {clear: both;content: ".";display: block;height: 0;visibility: hidden}
+.x {display: inline-table}
+/* FILTERS   hide from IE-mac \ */
+.x,.caption {display: block}
+/* end hide from IE-mac */
+/*@end*/

@@ -4,6 +4,13 @@
 	<xsl:import href="typography.xsl"/>
 	<xsl:import href="get-images.xsl"/>
 
+	<xsl:param name="publish-page">
+		<xsl:choose>
+			<xsl:when test="$current-page = 'drafts'">drafts</xsl:when>
+			<xsl:otherwise>articles</xsl:otherwise>
+		</xsl:choose>
+	</xsl:param>
+	
 	<xsl:template match="entry" mode="article">
 		<div class="post span-9">
 			<div class="post-meta col span-2">
@@ -20,11 +27,14 @@
 						</xsl:for-each>
 					</li>
 					<li><a href="{$root}/articles/{title/@handle}#comments"><xsl:value-of select="@comments"/> comment<xsl:if test="@comments != 1">s</xsl:if></a></li>
+					<xsl:if test="/data/events/login-info/@logged-in = 'true'">
+						<li><a href="{$root}/symphony/publish/articles/edit/{@id}/">Edit</a></li>
+					</xsl:if>
 				</ul>
 			</div>
 
 			<div class="post-content last span-7 nudge-2">
-				<h3><a href="{$root}/articles/{title/@handle}"><xsl:value-of select="title"/></a></h3>
+				<h3><a href="{$root}/{$publish-page}/{title/@handle}"><xsl:value-of select="title"/></a></h3>
 				<xsl:apply-templates select="body/*[position() &lt; 3]" mode="html"/>
 					<xsl:if test="(article-images) and (manage-images = 'Yes')">
 						<xsl:call-template name="get-images">

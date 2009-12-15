@@ -827,6 +827,8 @@ INSERT INTO `tbl_pages` (`id`, `parent`, `title`, `handle`, `path`, `params`, `d
 INSERT INTO `tbl_pages` (`id`, `parent`, `title`, `handle`, `path`, `params`, `data_sources`, `events`, `sortorder`) VALUES (76, NULL, 'Page Not Found', 'page-not-found', NULL, NULL, NULL, NULL, 10);
 INSERT INTO `tbl_pages` (`id`, `parent`, `title`, `handle`, `path`, `params`, `data_sources`, `events`, `sortorder`) VALUES (77, 68, 'Categories', 'category', 'archive', 'category', 'about_me,all_categories,archive_listing,categories,navigation,tags,twitter,website_owner', 'login', 5);
 INSERT INTO `tbl_pages` (`id`, `parent`, `title`, `handle`, `path`, `params`, `data_sources`, `events`, `sortorder`) VALUES (78, 68, 'Tag', 'tag', 'archive', 'tag', 'about_me,archive_listing,categories,navigation,tags,twitter,website_owner', 'login', 6);
+INSERT INTO `tbl_pages` (`id`, `parent`, `title`, `handle`, `path`, `params`, `data_sources`, `events`, `sortorder`) VALUES (79, NULL, 'Drafts', 'drafts', NULL, 'entry/cat', 'categories,drafts,navigation,tags,website_owner', 'login', 11);
+INSERT INTO `tbl_pages` (`id`, `parent`, `title`, `handle`, `path`, `params`, `data_sources`, `events`, `sortorder`) VALUES (80, NULL, 'Forbidden', 'forbidden', NULL, NULL, 'navigation,website_owner', 'login', 12);
 
 -- *** DATA: `tbl_pages_types` ***
 INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (609, 76, 404);
@@ -839,6 +841,10 @@ INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (640, 64, 'hidden
 INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (610, 75, 'hidden');
 INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (608, 76, 'hidden');
 INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (652, 77, 'hidden');
+INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (654, 79, 'admin');
+INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (655, 79, 'hidden');
+INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (656, 80, 403);
+INSERT INTO `tbl_pages_types` (`id`, `page_id`, `type`) VALUES (657, 80, 'hidden');
 
 -- *** DATA: `tbl_sections` ***
 INSERT INTO `tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (1, 'Articles', 'articles', 0, 26, 'asc', 'no', 'Content');

@@ -15,6 +15,7 @@
 		public $dsParamFILTERS = array(
 				'4' => '{$ds-categories}',
 				'40' => '{$tag}',
+				'5' => 'yes',
 		);
 		
 		public $dsParamINCLUDEDELEMENTS = array(
@@ -34,11 +35,11 @@
 			return array(
 					 'name' => 'Archive: Listing',
 					 'author' => array(
-							'name' => 'Allen Chang',
-							'website' => 'http://localhost/ensembles/rodrigo',
-							'email' => 'allen@chaoticpattern.com'),
+							'name' => 'Stephen Bau',
+							'website' => 'http://home/sym/piano-sonata',
+							'email' => 'stephen@domain7.com'),
 					 'version' => '1.0',
-					 'release-date' => '2009-10-29T01:21:32+00:00');	
+					 'release-date' => '2009-12-15T19:37:24+00:00');	
 		}
 		
 		public function getSource(){

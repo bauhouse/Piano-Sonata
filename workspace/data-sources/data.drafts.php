@@ -20,7 +20,10 @@
 				'title',
 				'body: formatted',
 				'date',
-				'categories'
+				'manage-images',
+				'article-images',
+				'categories',
+				'tags'
 		);
 
 		public function __construct(&$parent, $env=NULL, $process_params=true){
@@ -32,11 +35,11 @@
 			return array(
 					 'name' => 'Drafts',
 					 'author' => array(
-							'name' => 'Allen Chang',
-							'website' => 'http://symphony-cms.com',
-							'email' => 'allen@symphony-cms.com'),
+							'name' => 'Stephen Bau',
+							'website' => 'http://home/sym/piano-sonata',
+							'email' => 'stephen@domain7.com'),
 					 'version' => '1.0',
-					 'release-date' => '2009-07-27T05:15:19+00:00');	
+					 'release-date' => '2009-12-15T18:55:12+00:00');	
 		}
 		
 		public function getSource(){

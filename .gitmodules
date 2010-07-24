@@ -19,3 +19,21 @@
 [submodule "extensions/debugdevkit"]
 	path = extensions/debugdevkit
 	url = git://github.com/symphonycms/debugdevkit.git
+[submodule "extensions/mediathek"]
+	path = extensions/mediathek
+	url = git://github.com/nilshoerrmann/mediathek.git
+[submodule "extensions/multiselect_to_checkboxes"]
+	path = extensions/multiselect_to_checkboxes
+	url = git://github.com/Demwunz/multiselect_to_checkboxes.git
+[submodule "extensions/static_section"]
+	path = extensions/static_section
+	url = git://github.com/knupska/static_section.git
+[submodule "extensions/subsectionfield"]
+	path = extensions/subsectionfield
+	url = git://github.com/rowan-lewis/subsectionfield.git
+[submodule "extensions/uniqueuploadfield"]
+	path = extensions/uniqueuploadfield
+	url = git://github.com/michael-e/uniqueuploadfield.git
+[submodule "extensions/calendaroverlay"]
+	path = extensions/calendaroverlay
+	url = git://github.com/rowan-lewis/calendaroverlay.git

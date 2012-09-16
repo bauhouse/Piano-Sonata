@@ -27,7 +27,7 @@
 						</xsl:for-each>
 					</li>
 					<li><a href="{$root}/articles/{title/@handle}#comments"><xsl:value-of select="@comments"/> comment<xsl:if test="@comments != 1">s</xsl:if></a></li>
-					<xsl:if test="/data/events/login-info/@logged-in = 'true'">
+					<xsl:if test="/data/logged-in-author/author">
 						<li><a href="{$root}/symphony/publish/articles/edit/{@id}/">Edit</a></li>
 					</xsl:if>
 				</ul>

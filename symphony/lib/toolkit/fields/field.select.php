@@ -1,55 +1,346 @@
 <?php
-	
+
+	/**
+	 * @package toolkit
+	 */
+
+	/**
+	 * A simple Select field that essentially maps to HTML's `<select/>`. The
+	 * options for this field can be static, or feed from another field.
+	 */
+
 	Class fieldSelect extends Field {
-		function __construct(&$parent){
-			parent::__construct($parent);
+
+		public function __construct(){
+			parent::__construct();
 			$this->_name = __('Select Box');
-			
+			$this->_required = true;
+			$this->_showassociation = true;
+
 			// Set default
-			$this->set('show_column', 'no');			
+			$this->set('show_column', 'yes');
+			$this->set('location', 'sidebar');
+			$this->set('required', 'no');
 		}
 
-		function canToggle(){
+	/*-------------------------------------------------------------------------
+		Definition:
+	-------------------------------------------------------------------------*/
+
+		public function canToggle(){
 			return ($this->get('allow_multiple_selection') == 'yes' ? false : true);
 		}
-		
-		function allowDatasourceOutputGrouping(){
-			## Grouping follows the same rule as toggling.
-			return $this->canToggle();
+
+		public function getToggleStates() {
+			$values = preg_split('/,\s*/i', $this->get('static_options'), -1, PREG_SPLIT_NO_EMPTY);
+
+			if ($this->get('dynamic_options') != '') $this->findAndAddDynamicOptions($values);
+
+			$values = array_map('trim', $values);
+			$states = array();
+
+			foreach ($values as $value) {
+				$value = $value;
+				$states[$value] = $value;
+			}
+
+			if($this->get('sort_options') == 'yes') {
+				natsort($states);
+			}
+
+			return $states;
 		}
-		
-		function allowDatasourceParamOutput(){
-			return true;
-		}		
-		
-		function canFilter(){
+
+		public function toggleFieldData(array $data, $newState, $entry_id=null){
+			$data['value'] = $newState;
+			$data['handle'] = Lang::createHandle($newState);
+			return $data;
+		}
+
+		public function canFilter(){
 			return true;
 		}
-		
+
 		public function canImport(){
 			return true;
 		}
-		
-		function canPrePopulate(){
-			return true;
-		}	
 
-		function isSortable(){
+		public function canPrePopulate(){
 			return true;
 		}
-		
-		public function appendFormattedElement(&$wrapper, $data, $encode = false) {
-			if (!is_array($data) or empty($data)) return;
-			
+
+		public function isSortable(){
+			return true;
+		}
+
+		public function allowDatasourceOutputGrouping(){
+			// Grouping follows the same rule as toggling.
+			return $this->canToggle();
+		}
+
+		public function allowDatasourceParamOutput(){
+			return true;
+		}
+
+	/*-------------------------------------------------------------------------
+		Setup:
+	-------------------------------------------------------------------------*/
+
+		public function createTable(){
+			return Symphony::Database()->query("
+				CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
+				  `id` int(11) unsigned NOT NULL auto_increment,
+				  `entry_id` int(11) unsigned NOT NULL,
+				  `handle` varchar(255) default NULL,
+				  `value` varchar(255) default NULL,
+				  PRIMARY KEY  (`id`),
+				  KEY `entry_id` (`entry_id`),
+				  KEY `handle` (`handle`),
+				  KEY `value` (`value`)
+				) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+			");
+		}
+
+	/*-------------------------------------------------------------------------
+		Utilities:
+	-------------------------------------------------------------------------*/
+
+		public function fetchAssociatedEntryCount($value){
+			return Symphony::Database()->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::Database()->cleanValue($value)."'");
+		}
+
+		public function fetchAssociatedEntryIDs($value){
+			return Symphony::Database()->fetchCol('entry_id', "SELECT `entry_id` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::Database()->cleanValue($value)."'");
+		}
+
+		public function fetchAssociatedEntrySearchValue($data){
+			if(!is_array($data)) return $data;
+
+			return $data['value'];
+		}
+
+		public function findAndAddDynamicOptions(&$values){
+			if(!is_array($values)) $values = array();
+
+			$results = false;
+
+			// Ensure that the table has a 'value' column
+			if((boolean)Symphony::Database()->fetchVar('Field', 0, sprintf("
+					SHOW COLUMNS FROM `tbl_entries_data_%d` LIKE '%s'
+				", $this->get('dynamic_options'), 'value'
+			))) {
+				$results = Symphony::Database()->fetchCol('value', sprintf("
+						SELECT DISTINCT `value`
+						FROM `tbl_entries_data_%d`
+						ORDER BY `value` ASC
+					", $this->get('dynamic_options')
+				));
+			}
+
+			// In the case of a Upload field, use 'file' instead of 'value'
+			if(($results == false) && (boolean)Symphony::Database()->fetchVar('Field', 0, sprintf("
+					SHOW COLUMNS FROM `tbl_entries_data_%d` LIKE '%s'
+				", $this->get('dynamic_options'), 'file'
+			))) {
+				$results = Symphony::Database()->fetchCol('file', sprintf("
+						SELECT DISTINCT `file`
+						FROM `tbl_entries_data_%d`
+						ORDER BY `file` ASC
+					", $this->get('dynamic_options')
+				));
+			}
+
+			if($results) {
+				if($this->get('sort_options') == 'no') {
+					natsort($results);
+				}
+
+				$values = array_merge($values, $results);
+			}
+		}
+
+	/*-------------------------------------------------------------------------
+		Settings:
+	-------------------------------------------------------------------------*/
+
+		public function findDefaults(array &$settings){
+			if(!isset($settings['allow_multiple_selection'])) $settings['allow_multiple_selection'] = 'no';
+			if(!isset($settings['show_association'])) $settings['show_association'] = 'no';
+			if(!isset($settings['sort_options'])) $settings['sort_options'] = 'no';
+		}
+
+		public function displaySettingsPanel(XMLElement &$wrapper, $errors = null) {
+			parent::displaySettingsPanel($wrapper, $errors);
+
+			$div = new XMLElement('div', NULL, array('class' => 'two columns'));
+
+			// Predefined Values
+			$label = Widget::Label(__('Predefined Values'));
+			$label->setAttribute('class', 'column');
+			$label->appendChild(new XMLElement('i', __('Optional')));
+			$input = Widget::Input('fields['.$this->get('sortorder').'][static_options]', General::sanitize($this->get('static_options')));
+			$label->appendChild($input);
+			$div->appendChild($label);
+
+			// Dynamic Values
+			$label = Widget::Label(__('Dynamic Values'));
+			$label->setAttribute('class', 'column');
+			$label->appendChild(new XMLElement('i', __('Optional')));
+
+			$sections = SectionManager::fetch(NULL, 'ASC', 'name');
+			$field_groups = array();
+
+			if(is_array($sections) && !empty($sections))
+				foreach($sections as $section) $field_groups[$section->get('id')] = array('fields' => $section->fetchFields(), 'section' => $section);
+
+			$options = array(
+				array('', false, __('None')),
+			);
+
+			foreach($field_groups as $group){
+				if(!is_array($group['fields'])) continue;
+
+				$fields = array();
+				foreach($group['fields'] as $f){
+					if($f->get('id') != $this->get('id') && $f->canPrePopulate()) $fields[] = array($f->get('id'), ($this->get('dynamic_options') == $f->get('id')), $f->get('label'));
+				}
+
+				if(is_array($fields) && !empty($fields)) $options[] = array('label' => $group['section']->get('name'), 'options' => $fields);
+			}
+
+			$label->appendChild(Widget::Select('fields['.$this->get('sortorder').'][dynamic_options]', $options));
+
+			if(isset($errors['dynamic_options'])) $div->appendChild(Widget::Error($label, $errors['dynamic_options']));
+			else $div->appendChild($label);
+
+			$wrapper->appendChild($div);
+
+			$div = new XMLElement('div', NULL, array('class' => 'two columns'));
+
+			// Allow selection of multiple items
+			$label = Widget::Label();
+			$label->setAttribute('class', 'column');
+			$input = Widget::Input('fields['.$this->get('sortorder').'][allow_multiple_selection]', 'yes', 'checkbox');
+			if($this->get('allow_multiple_selection') == 'yes') $input->setAttribute('checked', 'checked');
+			$label->setValue(__('%s Allow selection of multiple options', array($input->generate())));
+			$div->appendChild($label);
+
+			$this->appendShowAssociationCheckbox($div, __('Available when using Dynamic Values'));
+
+			// Sort options?
+			$label = Widget::Label();
+			$label->setAttribute('class', 'column');
+			$input = Widget::Input('fields['.$this->get('sortorder').'][sort_options]', 'yes', 'checkbox');
+			if($this->get('sort_options') == 'yes') $input->setAttribute('checked', 'checked');
+			$label->setValue(__('%s Sort all options alphabetically', array($input->generate())));
+			$div->appendChild($label);
+			$wrapper->appendChild($div);
+
+			$div = new XMLElement('div', NULL, array('class' => 'two columns'));
+			$this->appendShowColumnCheckbox($div);
+			$this->appendRequiredCheckbox($div);
+			$wrapper->appendChild($div);
+		}
+
+		public function checkFields(array &$errors, $checkForDuplicates = true){
+			if(!is_array($errors)) $errors = array();
+
+			if($this->get('static_options') == '' && ($this->get('dynamic_options') == '' || $this->get('dynamic_options') == 'none'))
+				$errors['dynamic_options'] = __('At least one source must be specified, dynamic or static.');
+
+			parent::checkFields($errors, $checkForDuplicates);
+		}
+
+		public function commit(){
+			if(!parent::commit()) return false;
+
+			$id = $this->get('id');
+
+			if($id === false) return false;
+
+			$fields = array();
+
+			if($this->get('static_options') != '') $fields['static_options'] = $this->get('static_options');
+			if($this->get('dynamic_options') != '') $fields['dynamic_options'] = $this->get('dynamic_options');
+			$fields['allow_multiple_selection'] = ($this->get('allow_multiple_selection') ? $this->get('allow_multiple_selection') : 'no');
+			$fields['sort_options'] = $this->get('sort_options') == 'yes' ? 'yes' : 'no';
+			$fields['show_association'] = $this->get('show_association') == 'yes' ? 'yes' : 'no';
+
+			if(!FieldManager::saveSettings($id, $fields)) { return false; }
+
+			$this->removeSectionAssociation($id);
+
+			// Dynamic Options isn't an array like in Select Box Link
+			$field_id = $this->get('dynamic_options');
+
+			if (!is_null($field_id)) {
+				$this->createSectionAssociation(NULL, $id, $field_id, $this->get('show_association') == 'yes' ? true : false);
+			}
+
+			return true;
+		}
+
+	/*-------------------------------------------------------------------------
+		Publish:
+	-------------------------------------------------------------------------*/
+
+		public function displayPublishPanel(XMLElement &$wrapper, $data = null, $flagWithError = null, $fieldnamePrefix = null, $fieldnamePostfix = null, $entry_id = null){
+			$states = $this->getToggleStates();
+
+			if(!is_array($data['value'])) $data['value'] = array($data['value']);
+
+			$options = array(
+				array(NULL, false, NULL)
+			);
+
+			foreach($states as $handle => $v){
+				$options[] = array(General::sanitize($v), in_array($v, $data['value']), General::sanitize($v));
+			}
+
+			$fieldname = 'fields'.$fieldnamePrefix.'['.$this->get('element_name').']'.$fieldnamePostfix;
+			if($this->get('allow_multiple_selection') == 'yes') $fieldname .= '[]';
+
+			$label = Widget::Label($this->get('label'));
+			if($this->get('required') != 'yes') $label->appendChild(new XMLElement('i', __('Optional')));
+			$label->appendChild(Widget::Select($fieldname, $options, ($this->get('allow_multiple_selection') == 'yes' ? array('multiple' => 'multiple') : NULL)));
+
+			if($flagWithError != NULL) $wrapper->appendChild(Widget::Error($label, $flagWithError));
+			else $wrapper->appendChild($label);
+		}
+
+		public function processRawFieldData($data, &$status, &$message=null, $simulate=false, $entry_id=NULL){
+			$status = self::__OK__;
+
+			if(!is_array($data)) return array('value' => $data, 'handle' => Lang::createHandle($data));
+
+			if(empty($data)) return NULL;
+
+			$result = array('value' => array(), 'handle' => array());
+
+			foreach($data as $value){
+				$result['value'][] = $value;
+				$result['handle'][] = Lang::createHandle($value);
+			}
+
+			return $result;
+		}
+
+	/*-------------------------------------------------------------------------
+		Output:
+	-------------------------------------------------------------------------*/
+
+		public function appendFormattedElement(XMLElement &$wrapper, $data, $encode = false, $mode = null, $entry_id = null) {
+			if (!is_array($data) or is_null($data['value'])) return;
+
 			$list = new XMLElement($this->get('element_name'));
-			
+
 			if (!is_array($data['handle']) and !is_array($data['value'])) {
 				$data = array(
 					'handle'	=> array($data['handle']),
 					'value'		=> array($data['value'])
 				);
 			}
-			
+
 			foreach ($data['value'] as $index => $value) {
 				$list->appendChild(new XMLElement(
 					'item',
@@ -61,146 +352,53 @@
 			}
 
 			$wrapper->appendChild($list);
-		}		
-		
-		function fetchAssociatedEntrySearchValue($data){
-			if(!is_array($data)) return $data;
-			
-			return $data['value'];
 		}
-		
-		function fetchAssociatedEntryCount($value){
-			return Symphony::Database()->fetchVar('count', 0, "SELECT count(*) AS `count` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::Database()->cleanValue($value)."'");
+
+		public function prepareTableValue($data, XMLElement $link=NULL, $entry_id = null){
+			$value = $data['value'];
+
+			if(!is_array($value)) $value = array($value);
+
+			return parent::prepareTableValue(array('value' => implode(', ', $value)), $link, $entry_id = null);
 		}
-		
-		function fetchAssociatedEntryIDs($value){
-			return Symphony::Database()->fetchCol('entry_id', "SELECT `entry_id` FROM `tbl_entries_data_".$this->get('id')."` WHERE `value` = '".Symphony::Database()->cleanValue($value)."'");
-		}	
-			
-		public function getParameterPoolValue($data){
+
+		public function getParameterPoolValue($data, $entry_id = null) {
 			return $data['handle'];
-		}	
-			
-		public function getToggleStates() {
-			$values = preg_split('/,\s*/i', $this->get('static_options'), -1, PREG_SPLIT_NO_EMPTY);
-			
-			if ($this->get('dynamic_options') != '') $this->findAndAddDynamicOptions($values);
-			
-			$values = array_map('trim', $values);
-			$states = array();
-			
-			foreach ($values as $value) {
-				$value = $value;
-				$states[$value] = $value;
-			}
-			
-			return $states;
-		}
-		
-		function toggleFieldData($data, $newState){
-			$data['value'] = $newState;
-			$data['handle'] = Lang::createHandle($newState);
-			return $data;
 		}
 
-		function displayPublishPanel(&$wrapper, $data=NULL, $flagWithError=NULL, $fieldnamePrefix=NULL, $fieldnamePostfix=NULL){
-			$states = $this->getToggleStates();
-			natsort($states);
-			
-			if(!is_array($data['value'])) $data['value'] = array($data['value']);
-			
-			$options = array();
-			
-			foreach($states as $handle => $v){
-				$options[] = array(General::sanitize($v), in_array($v, $data['value']), $v);
-			}
-			
-			$fieldname = 'fields'.$fieldnamePrefix.'['.$this->get('element_name').']'.$fieldnamePostfix;
-			if($this->get('allow_multiple_selection') == 'yes') $fieldname .= '[]';
-			
-			$label = Widget::Label($this->get('label'));
-			$label->appendChild(Widget::Select($fieldname, $options, ($this->get('allow_multiple_selection') == 'yes' ? array('multiple' => 'multiple') : NULL)));
-			
-			if($flagWithError != NULL) $wrapper->appendChild(Widget::wrapFormElementWithError($label, $flagWithError));
-			else $wrapper->appendChild($label);		
-		}
+	/*-------------------------------------------------------------------------
+		Filtering:
+	-------------------------------------------------------------------------*/
 
-		function displayDatasourceFilterPanel(&$wrapper, $data=NULL, $errors=NULL, $fieldnamePrefix=NULL, $fieldnamePostfix=NULL){
-			
+		public function displayDatasourceFilterPanel(XMLElement &$wrapper, $data = null, $errors = null, $fieldnamePrefix=NULL, $fieldnamePostfix=NULL){
 			parent::displayDatasourceFilterPanel($wrapper, $data, $errors, $fieldnamePrefix, $fieldnamePostfix);
-			
+
 			$data = preg_split('/,\s*/i', $data);
 			$data = array_map('trim', $data);
-			
+
 			$existing_options = $this->getToggleStates();
 
 			if(is_array($existing_options) && !empty($existing_options)){
 				$optionlist = new XMLElement('ul');
 				$optionlist->setAttribute('class', 'tags');
-				
-				foreach($existing_options as $option) $optionlist->appendChild(new XMLElement('li', $option));
-						
+
+				foreach($existing_options as $option) {
+					$optionlist->appendChild(
+						new XMLElement('li', General::sanitize($option))
+					);
+				};
+
 				$wrapper->appendChild($optionlist);
 			}
-					
 		}
 
-		function findAndAddDynamicOptions(&$values){
-
-			if(!is_array($values)) $values = array();
-
-			$sql = "SELECT DISTINCT `value` FROM `tbl_entries_data_".$this->get('dynamic_options')."`
-					ORDER BY `value` DESC";
-					
-			if($results = $this->Database->fetchCol('value', $sql)) $values = array_merge($values, $results);
-
-		}
-
-		function prepareTableValue($data, XMLElement $link=NULL){
-			$value = $data['value'];
-			
-			if(!is_array($value)) $value = array($value);
-			
-			return parent::prepareTableValue(array('value' => @implode(', ', $value)), $link);
-		}
-
-		public function processRawFieldData($data, &$status, $simulate=false, $entry_id=NULL){
-			
-			$status = self::__OK__;
-
-			if(!is_array($data)) return array('value' => $data, 'handle' => Lang::createHandle($data));
-
-			if(empty($data)) return NULL;
-			
-			$result = array('value' => array(), 'handle' => array());
-
-			foreach($data as $value){ 
-				$result['value'][] = $value;
-				$result['handle'][] = Lang::createHandle($value);
-			}
-			
-			return $result;
-		}
-
-		public function buildDSRetrivalSQL($data, &$joins, &$where, $andOperation = false) {
+		public function buildDSRetrievalSQL($data, &$joins, &$where, $andOperation = false) {
 			$field_id = $this->get('id');
-			
+
 			if (self::isFilterRegex($data[0])) {
-				$this->_key++;
-				$pattern = str_replace('regexp:', '', $this->cleanValue($data[0]));
-				$joins .= "
-					LEFT JOIN
-						`tbl_entries_data_{$field_id}` AS t{$field_id}_{$this->_key}
-						ON (e.id = t{$field_id}_{$this->_key}.entry_id)
-				";
-				$where .= "
-					AND (
-						t{$field_id}_{$this->_key}.value REGEXP '{$pattern}'
-						OR t{$field_id}_{$this->_key}.handle REGEXP '{$pattern}'
-					)
-				";
-				
-			} elseif ($andOperation) {
+				$this->buildRegexSQL($data[0], array('value', 'handle'), $joins, $where);
+			}
+			else if ($andOperation) {
 				foreach ($data as $value) {
 					$this->_key++;
 					$value = $this->cleanValue($value);
@@ -216,14 +414,14 @@
 						)
 					";
 				}
-				
-			} else {
+			}
+			else {
 				if (!is_array($data)) $data = array($data);
-				
+
 				foreach ($data as &$value) {
 					$value = $this->cleanValue($value);
 				}
-				
+
 				$this->_key++;
 				$data = implode("', '", $data);
 				$joins .= "
@@ -238,164 +436,57 @@
 					)
 				";
 			}
-			
+
 			return true;
 		}
-		
-		function commit(){
-			
-			if(!parent::commit()) return false;
-			
-			$id = $this->get('id');
 
-			if($id === false) return false;
-			
-			$fields = array();
-			
-			$fields['field_id'] = $id;
-			if($this->get('static_options') != '') $fields['static_options'] = $this->get('static_options');
-			if($this->get('dynamic_options') != '') $fields['dynamic_options'] = $this->get('dynamic_options');
-			$fields['allow_multiple_selection'] = ($this->get('allow_multiple_selection') ? $this->get('allow_multiple_selection') : 'no');
+	/*-------------------------------------------------------------------------
+		Grouping:
+	-------------------------------------------------------------------------*/
 
-			$this->Database->query("DELETE FROM `tbl_fields_".$this->handle()."` WHERE `field_id` = '$id' LIMIT 1");
-			
-			if(!$this->Database->insert($fields, 'tbl_fields_' . $this->handle())) return false;
-			
-			$this->removeSectionAssociation($id);
-			$this->createSectionAssociation(NULL, $id, $this->get('dynamic_options'));
-			
-			return true;
-					
-		}
-		
-		function checkFields(&$errors, $checkForDuplicates=true){
-			
-			if(!is_array($errors)) $errors = array();
-
-			if($this->get('static_options') == '' && ($this->get('dynamic_options') == '' || $this->get('dynamic_options') == 'none')) 
-				$errors['dynamic_options'] = __('At least one source must be specified, dynamic or static.');
-
-			parent::checkFields($errors, $checkForDuplicates);
-			
-		}
-		
-		function findDefaults(&$fields){
-			if(!isset($fields['allow_multiple_selection'])) $fields['allow_multiple_selection'] = 'no';
-		}
-				
-		public function displaySettingsPanel(&$wrapper, $errors = null) {
-			parent::displaySettingsPanel($wrapper, $errors);
-
-			$div = new XMLElement('div', NULL, array('class' => 'group'));
-			
-			$label = Widget::Label(__('Static Options'));
-			$label->appendChild(new XMLElement('i', __('Optional')));
-			$input = Widget::Input('fields['.$this->get('sortorder').'][static_options]', General::sanitize($this->get('static_options')));
-			$label->appendChild($input);
-			$div->appendChild($label);
-			
-			
-			$label = Widget::Label(__('Dynamic Options'));
-			
-			$sectionManager = new SectionManager($this->_engine);
-		    $sections = $sectionManager->fetch(NULL, 'ASC', 'name');
-			$field_groups = array();
-			
-			if(is_array($sections) && !empty($sections))
-				foreach($sections as $section) $field_groups[$section->get('id')] = array('fields' => $section->fetchFields(), 'section' => $section);
-			
-			$options = array(
-				array('', false, __('None')),
-			);
-			
-			foreach($field_groups as $group){
-				
-				if(!is_array($group['fields'])) continue;
-				
-				$fields = array();
-				foreach($group['fields'] as $f){
-					if($f->get('id') != $this->get('id') && $f->canPrePopulate()) $fields[] = array($f->get('id'), ($this->get('dynamic_options') == $f->get('id')), $f->get('label'));
-				}
-				
-				if(is_array($fields) && !empty($fields)) $options[] = array('label' => $group['section']->get('name'), 'options' => $fields);
-			}
-			
-			$label->appendChild(Widget::Select('fields['.$this->get('sortorder').'][dynamic_options]', $options));
-			$div->appendChild($label);
-						
-			if(isset($errors['dynamic_options'])) $wrapper->appendChild(Widget::wrapFormElementWithError($div, $errors['dynamic_options']));
-			else $wrapper->appendChild($div);
-						
-			## Allow selection of multiple items
-			$label = Widget::Label();
-			$input = Widget::Input('fields['.$this->get('sortorder').'][allow_multiple_selection]', 'yes', 'checkbox');
-			if($this->get('allow_multiple_selection') == 'yes') $input->setAttribute('checked', 'checked');			
-			$label->setValue(__('%s Allow selection of multiple options', array($input->generate())));
-			$wrapper->appendChild($label);
-			
-			$this->appendShowColumnCheckbox($wrapper);
-						
-		}
-
-		function groupRecords($records){
-			
+		public function groupRecords($records){
 			if(!is_array($records) || empty($records)) return;
-			
+
 			$groups = array($this->get('element_name') => array());
-			
+
 			foreach($records as $r){
 				$data = $r->getData($this->get('id'));
-				
 				$value = General::sanitize($data['value']);
-				$handle = Lang::createHandle($value);
-				
-				if(!isset($groups[$this->get('element_name')][$handle])){
-					$groups[$this->get('element_name')][$handle] = array('attr' => array('handle' => $handle, 'value' => $value),
-																		 'records' => array(), 'groups' => array());
-				}	
-																					
-				$groups[$this->get('element_name')][$handle]['records'][] = $r;
-								
+
+				if(!isset($groups[$this->get('element_name')][$data['handle']])){
+					$groups[$this->get('element_name')][$data['handle']] = array(
+						'attr' => array('handle' => $data['handle'], 'value' => $value),
+						'records' => array(),
+						'groups' => array()
+					);
+				}
+
+				$groups[$this->get('element_name')][$data['handle']]['records'][] = $r;
 			}
 
 			return $groups;
 		}
-		
-		function createTable(){
-			
-			return Symphony::Database()->query(
-			
-				"CREATE TABLE IF NOT EXISTS `tbl_entries_data_" . $this->get('id') . "` (
-				  `id` int(11) unsigned NOT NULL auto_increment,
-				  `entry_id` int(11) unsigned NOT NULL,
-				  `handle` varchar(255) default NULL,
-				  `value` varchar(255) default NULL,
-				  PRIMARY KEY  (`id`),
-				  KEY `entry_id` (`entry_id`),
-				  KEY `handle` (`handle`),
-				  KEY `value` (`value`)
-				) TYPE=MyISAM;"
-			
-			);
-		}
-		
+
+	/*-------------------------------------------------------------------------
+		Events:
+	-------------------------------------------------------------------------*/
+
 		public function getExampleFormMarkup(){
 			$states = $this->getToggleStates();
-			
+
 			$options = array();
 
 			foreach($states as $handle => $v){
 				$options[] = array($v, NULL, $v);
 			}
-			
+
 			$fieldname = 'fields['.$this->get('element_name').']';
 			if($this->get('allow_multiple_selection') == 'yes') $fieldname .= '[]';
-			
+
 			$label = Widget::Label($this->get('label'));
 			$label->appendChild(Widget::Select($fieldname, $options, ($this->get('allow_multiple_selection') == 'yes' ? array('multiple' => 'multiple') : NULL)));
-			
+
 			return $label;
-		}			
+		}
 
 	}
-

@@ -19,6 +19,9 @@
 [submodule "extensions/debugdevkit"]
 	path = extensions/debugdevkit
 	url = git://github.com/symphonycms/debugdevkit.git
+[submodule "extensions/xssfilter"]
+	path = extensions/xssfilter
+	url = git://github.com/symphonycms/xssfilter.git
 [submodule "extensions/uniqueuploadfield"]
 	path = extensions/uniqueuploadfield
 	url = git://github.com/michael-e/uniqueuploadfield.git

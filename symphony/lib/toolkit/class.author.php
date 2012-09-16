@@ -1,153 +1,259 @@
 <?php
-	
+	/**
+	 * @package toolkit
+	 */
+	/**
+	 * The Author class represents a Symphony Author object. Authors are
+	 * the backend users in Symphony.
+	 */
 	Class Author{
-			
-		private $_fields;
-		private $_accessSections;
-				
-		public function __construct($id=NULL){
-			
-			$this->_fields = array();
-			$this->_accessSections = NULL; 
-			
-			if(!is_null($id) && is_numeric($id)){
-				$this->loadAuthor($id);
-			}
-		}
-		
-		public function loadAuthor($id){
-			if(!is_object(Symphony::Database()) || !is_numeric($id)) return false;
 
-			$row = Symphony::Database()->fetchRow(0, "SELECT * FROM `tbl_authors` WHERE `id` = '$id' LIMIT 1");
+		/**
+		 * An associative array of information relating to this author where
+		 * the keys map directly to the `tbl_authors` columns.
+		 * @var array
+		 */
+		private $_fields = array();
 
-			if(!is_array($row) || empty($row)) return false;
-			
-			foreach($row as $key => $val){
-				$this->set($key, $val);
-			}
-			
-			return true;
-		}
-		
-		public function loadAuthorFromUsername($username){
-			if(!$row = Symphony::Database()->fetchRow(0, "SELECT * FROM `tbl_authors` WHERE `username` = '$username' LIMIT 1")) return false;
-			
-			foreach($row as $key => $val)
-				$this->set($key, $val);
-			
-			return true;			
-		}
+		/**
+		 * An array of all the sections an author can have access to. Defaults
+		 * to null. This is currently unused by Symphony.
+		 * @var array
+		 */
+		private $_accessSections = null;
 
-		public function verifyToken($token){
-		
-			if($this->get('auth_token_active') == 'no') return false;
-
-			$t = General::substrmin(General::hash($this->get('username') . $this->get('password')), 8);
-		
-			if($t == $token) return true; 
-		
-			return false;
-	
-		}
-	
-		public function createAuthToken(){
-			return General::substrmin(General::hash($this->get('username') . $this->get('password')), 8);	
-		}
-		
-		public function isTokenActive(){
-			return ($this->get('auth_token_active') == 'no' ? false : true);
-		}
-		
-		public function isDeveloper(){
-			return ($this->get('user_type') == 'developer');
-		}
-		
-		public function isPrimaryAccount(){
-			return ($this->get('primary') == 'yes');	
-		}
-		
-		public function getFullName(){
-			return $this->get('first_name') . ' ' . $this->get('last_name');
-		}
-
-		public function getAuthorAllowableSections(){
-			
-			if(!$sections = $this->get('allow_sections')) return array();
-			
-			$sections = preg_split('/,/', $sections, -1, PREG_SPLIT_NO_EMPTY);
-			@array_map('trim', $sections);
-			
-			return (is_array($sections) && !empty($sections) ? $sections : array());
-		}
-		
-		public function canAccessSection($section_id){
-			if(!$id = $this->get('id')) return false;
-			
-			if($this->get('user_type') == 'developer') return true;
-
-			$sections = $this->get('allow_sections');
-
-			if($this->_accessSections == NULL){
-				$sections = preg_split('/,/', $sections, -1, PREG_SPLIT_NO_EMPTY);
-				$this->_accessSections = $sections;
-			}
-			
-			if(in_array($section_id, $this->_accessSections)) return true;
-			
-			return false;
-		}
-		
+		/**
+		 * Stores a key=>value pair into the Author object's `$this->_fields` array.
+		 *
+		 * @param string $field
+		 *  Maps directly to a column in the `tbl_authors` table.
+		 * @param string $value
+		 *  The value for the given $field
+		 */
 		public function set($field, $value){
 			$this->_fields[trim($field)] = trim($value);
 		}
 
-		public function get($field){
-			if(!isset($this->_fields[$field]) || $this->_fields[$field] == '') return NULL;
+		/**
+		 * Retrieves the value from the Author object by field from `$this->_fields`
+		 * array. If field is omitted, all fields are returned.
+		 *
+		 * @param string $field
+		 *  Maps directly to a column in the `tbl_authors` table. Defaults to null
+		 * @return mixed
+		 *  If the field is not set or is empty, returns null.
+		 *  If the field is not provided, returns the `$this->_fields` array
+		 *  Otherwise returns a string.
+		 */
+		public function get($field = null){
+			if(is_null($field)) return $this->_fields;
+
+			if(!isset($this->_fields[$field]) || $this->_fields[$field] == '') return null;
+
 			return $this->_fields[$field];
 		}
-		
+
+		/**
+		 * Given a field, remove it from `$this->_fields`
+		 *
+		 * @since Symphony 2.2.1
+		 * @param string $field
+		 *  Maps directly to a column in the `tbl_authors` table. Defaults to null
+		 */
+		public function remove($field = null) {
+			if(!is_null($field)) return;
+
+			unset($this->_fields[$field]);
+		}
+
+		/**
+		 * Returns boolean if the current Author is of the developer
+		 * user type.
+		 *
+		 * @return boolean
+		 */
+		public function isDeveloper(){
+			return ($this->get('user_type') == 'developer');
+		}
+
+		/**
+		 * Returns boolean if the current Author is the original creator
+		 * of this Symphony installation.
+		 *
+		 * @return boolean
+		 */
+		public function isPrimaryAccount(){
+			return ($this->get('primary') == 'yes');
+		}
+
+		/**
+		 * Returns boolean if the current Author's authentication token
+		 * is active or not.
+		 *
+		 * @return boolean
+		 */
+		public function isTokenActive(){
+			return ($this->get('auth_token_active') == 'yes' ? true : false);
+		}
+
+		/**
+		 * A convenience method that returns an Authors full name
+		 *
+		 * @return string
+		 */
+		public function getFullName(){
+			return $this->get('first_name') . ' ' . $this->get('last_name');
+		}
+
+		/**
+		 * Creates an author token using the `General::hash` function and the
+		 * current Author's username and password. The default hash function
+		 * is SHA1
+		 *
+		 * @see toolkit.General#hash()
+		 * @see toolkit.General#substrmin()
+		 *
+		 * @return string
+		 */
+		public function createAuthToken(){
+			return General::substrmin(General::hash($this->get('username') . $this->get('password')), 8);
+		}
+
+		/**
+		 * Prior to saving an Author object, the validate function ensures that
+		 * the values in `$this->_fields` array are correct. As of Symphony 2.3
+		 * Authors must have unique username AND email address. This function returns
+		 * boolean, with an `$errors` array provided by reference to the callee
+		 * function.
+		 *
+		 * @param array $errors
+		 * @return boolean
+		 */
 		public function validate(&$errors){
-			
+
+			require_once(TOOLKIT . '/util.validators.php');
+
 			$errors = array();
-			
-			if($this->get('first_name') == '') $errors['first_name'] = __('First name is required');
-			
-			if($this->get('last_name') == '') $errors['last_name'] = __('Last name is required');
-			
-			if($this->get('email') == '') $errors['email'] = __('E-mail address is required');
-			elseif(!General::validateString($this->get('email'), '/^[^@]+@[^\.@]+\.[^@]+$/i')) $errors['email'] = __('E-mail address entered is invalid');
-			
-			if($this->get('username') == '') $errors['username'] = __('Username is required');
-			elseif($this->get('id')){			
-				$current_username = Symphony::Database()->fetchVar('username', 0, "SELECT `username` FROM `tbl_authors` WHERE `id` = " . $this->get('id'));	
-				if($current_username != $this->get('username') && Symphony::Database()->fetchVar('id', 0, "SELECT `id` FROM `tbl_authors` WHERE `username` = '".$this->get('username')."' LIMIT 1"))
-					$errors['username'] = __('Username is already taken');			
+			$current_author = null;
+
+			if(is_null($this->get('first_name'))) $errors['first_name'] = __('First name is required');
+
+			if(is_null($this->get('last_name'))) $errors['last_name'] = __('Last name is required');
+
+			if($this->get('id')) {
+				$current_author = Symphony::Database()->fetchRow(0, sprintf("
+						SELECT `email`, `username`
+						FROM `tbl_authors`
+						WHERE `id` = %d
+					",
+						$this->get('id')
+				));
 			}
-				
-			elseif(Symphony::Database()->fetchVar('id', 0, "SELECT `id` FROM `tbl_authors` WHERE `username` = '".$this->get('username')."' LIMIT 1"))
+
+			// Check that Email is provided
+			if(is_null($this->get('email'))) {
+				$errors['email'] = __('E-mail address is required');
+			}
+
+			// Check Email is valid
+			else if (!General::validateString($this->get('email'), $validators['email'])) {
+				$errors['email'] = __('E-mail address entered is invalid');
+			}
+
+			// Check that if an existing Author changes their email address that
+			// it is not already used by another Author
+			else if ($this->get('id')) {
+				if(
+					$current_author['email'] != $this->get('email') &&
+					Symphony::Database()->fetchVar('count', 0, sprintf("
+							SELECT COUNT(`id`) as `count`
+							FROM `tbl_authors`
+							WHERE `email` = '%s'
+						",
+							$this->get('email')
+					)) != 0
+				) {
+					$errors['email'] = __('E-mail address is already taken');
+				}
+			}
+
+			// Check that Email is not in use by another Author
+			else if (Symphony::Database()->fetchVar('id', 0, sprintf("
+					SELECT `id`
+					FROM `tbl_authors`
+					WHERE `email` = '%s'
+					LIMIT 1
+				",
+					$this->get('email')
+			))) {
+				$errors['email'] = __('E-mail address is already taken');
+			}
+
+			// Check the username exists
+			if(is_null($this->get('username'))) {
+				$errors['username'] = __('Username is required');
+			}
+
+			// Check that if it's an existing Author that the username is not already
+			// in use by another Author if they are trying to change it.
+			elseif ($this->get('id')) {
+				if(
+					$current_author['username'] != $this->get('username') &&
+					Symphony::Database()->fetchVar('count', 0, sprintf("
+							SELECT COUNT(`id`) as `count`
+							FROM `tbl_authors`
+							WHERE `username` = '%s'
+						",
+							$this->get('username')
+					)) != 0
+				) {
+					$errors['username'] = __('Username is already taken');
+				}
+			}
+
+			// Check that the username is unique
+			else if (Symphony::Database()->fetchVar('id', 0, sprintf("
+					SELECT `id`
+					FROM `tbl_authors`
+					WHERE `username` = '%s'
+					LIMIT 1
+				",
+					$this->get('username')
+			))) {
 				$errors['username'] = __('Username is already taken');
-			
-			if($this->get('password') == '') $errors['password'] = __('Password is required');
-			
+			}
+
+			if(is_null($this->get('password'))) $errors['password'] = __('Password is required');
+
 			return (empty($errors) ? true : false);
 		}
-		
+
+		/**
+		 * This is the insert method for the Author. This takes the current
+		 * `$this->_fields` values and adds them to the database using either the
+		 * `AuthorManager::edit` or `AuthorManager::add` functions. An
+		 * existing user is determined by if an ID is already set.
+		 *
+		 * @see toolkit.AuthorManager#add()
+		 * @see toolkit.AuthorManager#edit()
+		 * @return integer|boolean
+		 *  When a new Author is added or updated, an integer of the Author ID
+		 *  will be returned, otherwise false will be returned for a failed update.
+		 */
 		public function commit(){
-						
-			$fields = $this->_fields;	
-				
-			if(isset($fields['id'])){
-				$id = $fields['id'];
-				unset($fields['id']);
-				return AuthorManager::edit($id, $fields);
-						
+			if(!is_null($this->get('id'))) {
+				$id = $this->get('id');
+				$this->remove('id');
+
+				if(AuthorManager::edit($id, $this->get())) {
+					$this->set('id', $id);
+					return $id;
+				}
+				else return false;
 			}
-			
-			else{
-				return AuthorManager::add($fields);	
-			}		
-			
+			else {
+				return AuthorManager::add($this->get());
+			}
 		}
 
 	}
-

@@ -1,339 +1,588 @@
 <?php
-
 	/**
-	 * Symphony Language Class
-	 *
-	 * Provides an interface for translations and transliterations
+	 * @package toolkit
 	 */
-
-	// Translations
-	function __($string, array $tokens=NULL){
-		if(!class_exists('Lang') || !(Lang::Dictionary() instanceof Dictionary)) return vsprintf($string, $tokens);
-		return Lang::Dictionary()->translate($string, $tokens);
-	}
-	
-	// Transliterations
-	function _t($str){
-		
-		$patterns = array_keys(Lang::Transliterations());
-		$values = array_values(Lang::Transliterations());
-		
-		$str = preg_replace($patterns, $values, $str);
-		
-		return $str;
-	}
-	
 	/**
-	 * Dictionary Class
+	 * The translation function accepts an English string and returns its translation
+	 * to the active system language. If the given string is not available in the
+	 * current dictionary the original English string will be returned. Given an optional
+	 * `$inserts` array, the function will replace translation placeholders using `vsprintf()`.
+	 * Since Symphony 2.3, it is also possible to have multiple translation of the same string
+	 * according to the page namespace (i.e. the value returned by Symphony's `getPageNamespace()`
+	 * method). In your lang file, use the `$dictionary` key as namespace and its value as an array
+	 * of context-aware translations, as shown below:
 	 *
-	 * Contains the dictionary for the current language and provides the translate function
+	 * $dictionary = array(
+	 * 		[...]
+	 *
+	 * 		'Create new' => 'Translation for Create New',
+	 *
+	 * 		'/blueprints/datasources' => array(
+	 * 			'Create new' =>
+	 * 			'If we are inside a /blueprints/datasources/* page, this translation will be returned for the string'
+	 * 		),
+	 *
+	 * 		[...]
+	 *  );
+	 *
+	 * @see core.Symphony#getPageNamespace()
+	 * @param string $string
+	 *  The string that should be translated
+	 * @param array $inserts (optional)
+	 *  Optional array used to replace translation placeholders, defaults to NULL
+	 * @return
+	 *  Returns the translated string
 	 */
-	Class Dictionary {
-	
-		private $_strings;
-		
-		public function __construct(array $strings) {
-			$this->_strings = $strings;
-		}
-		
-		public function translate($string, array $tokens=NULL) {
-			$translated = $this->find($string);
-			
-			if($translated === false) $translated = $string;
-			
-			if(!is_null($tokens) && is_array($tokens) && !empty($tokens)) {
-				$translated = vsprintf($translated, $tokens);
-			}
-		
-			return $translated;
-			
-		}
-		
-		public function find($string) {
-			if(isset($this->_strings[$string])) {
-				return $this->_strings[$string];
-			}
-			
-			return false;
-		}
-		
-		public function add($from, $to) {
-			$this->_strings[$from] = $to;
-		}
-
-		public function merge($strings) {
-			if(is_array($strings)) $this->_strings = array_merge($this->_strings, $strings);
-		}
-		
-		public function remove($string) {
-			unset($this->_strings[$string]);
-		}
-		
+	function __($string, $inserts=NULL) {
+		return Lang::translate($string, $inserts);
 	}
-	
+
 	/**
-	 * Lanuage Class
-	 *
-	 * Loads and manages languages
+	 * The Lang class loads and manages languages
 	 */
 	Class Lang {
-		
-		private static $_dictionary;
-		private static $_transliterations;		
-		private static $_instance;
-		
+
 		/**
-		 * Load specified language file
-		 */				
-		public static function load($path, $lang, $clear=false) {
-
-			if((bool)$clear === true || !(self::$_dictionary instanceof Dictionary)) {
-				Lang::clear();
-			}
-
-			$include = sprintf($path, $lang);
-		
-			if(file_exists($include)){
-				require($include);
-			}
-
-			if(isset($dictionary) && is_array($dictionary)) self::$_dictionary->merge($dictionary);
-			if(isset($transliterations) && is_array($transliterations)) self::$_transliterations = array_merge(self::$_transliterations, $transliterations);
-
-			if(empty(self::$_transliterations)) {
-				include(TOOLKIT . '/include.transliterations.php');
-				self::$_transliterations = $transliterations;
-			}
-		}
-		
-		/**
-		 * Clear the current dictionary and transliteration arrays
+		 * Array of transliterations
+		 * @var array
 		 */
-		public static function clear() {
-			self::$_dictionary = new Dictionary(array());
-			self::$_transliterations = array();
-		}
-		
-		/**
-		 * Load all language files (core and extensions)
-		 *
-		 * It may be possible that there are only translations for an extension, 
-		 * so don't stop if there is no core translation as Symphony will always display the English strings.
-		 */		
-		public static function loadAll($ExtensionManager) {		
-			// Load localisation file for the Symphony core
-			$file = Lang::findLanguagePath(Symphony::lang(), $ExtensionManager) . '/lang.%s.php';
-			$path = sprintf($file, Symphony::lang());
-			if(file_exists($path)) {
-				Lang::load($file, Symphony::lang(), true);
-			}
+		private static $_transliterations;
 
-			// Load localisation files for extensions
-			foreach($ExtensionManager->listAll() as $handle => $e){
-				$path = $ExtensionManager->__getClassPath($handle) . '/lang/lang.%s.php';
-				if($e['status'] == EXTENSION_ENABLED && file_exists(sprintf($path, Symphony::lang()))){
-					Lang::add($path, Symphony::lang());
-				}			
-			}
-		}
-		
 		/**
-		 * Find the correct path to the core translations based on the language code
-		 *
-		 * The default English language strings are stored in /symphony/lib/lang whereas
-		 * the localisation files for other languages are stored in the extension folder.
-		 */		
-		public static function findLanguagePath($lang, $ExtensionManager) {
-			$file = sprintf('/lang.%s.php', $lang);
-			if(!file_exists(LANG . $file)) {
-				foreach($ExtensionManager->listAll() as $extension => $about) {
-					// Explicitly match localisation extensions
-					if(strpos($about['handle'], 'lang_') === false) continue;
-					$path = EXTENSIONS . '/' . $about['handle'] . '/lang';
-					if(file_exists($path . $file)) {
-						return $path;
-					}
-				}
-			}
-			else {
-				return LANG;
-			}
-		}
-		
-		public static function add($path, $lang) {
-			self::load($path, $lang);
-		}
+		 * Code of active language
+		 * @var string
+		 */
+		private static $_lang;
 
-		public static function Transliterations() {
-			return self::$_transliterations;
-		}
-				
+		/**
+		 * Context information of all available languages
+		 * @var array
+		 */
+		private static $_languages;
+
+		/**
+		 * Array of localized strings
+		 * @var array
+		 */
+		private static $_dictionary;
+
+		/**
+		 * Array of localized date and time strings
+		 * @var array
+		 */
+		private static $_datetime_dictionary;
+
+		/**
+		 * Get the current dictionary
+		 *
+		 * @return array
+		 *  Return the dictionary
+		 */
 		public static function Dictionary() {
 			return self::$_dictionary;
 		}
-		
+
 		/**
-		 * Create handle
+		 * Get a list of either enabled or disabled languages. Example:
 		 *
-		 * Given a string, this will clean it for use as a Symphony handle. Preserves multi-byte characters
-		 * @param string $string
-		 * @param int $max_length the maximum number of characters in the handle
-		 * @param string $delim all non-valid characters will be replaced with this
-		 * @param boolean $uriencode force the resultant string to be uri encoded making it safe for URL's
-		 * @param boolean $apply_transliteration if true, this will run the string through an array of substitution characters
-		 * @return string resultant handle
-		 */					
-		public static function createHandle($string, $max_length=255, $delim='-', $uriencode=false, $apply_transliteration=true, $additional_rule_set=NULL) {
-
-			// Use the transliteration table if provided
-			if($apply_transliteration == true) $string = _t($string);
-
-			$max_length = intval($max_length);
-			
-			// Strip out any tag
-			$string = strip_tags($string);
-			
-			// Remove punctuation
-			$string = preg_replace('/[\\.\'"]+/', NULL, $string);	
-						
-			// Trim it
-			if($max_length != NULL && is_numeric($max_length)) $string = General::limitWords($string, $max_length);
-								
-			// Replace spaces (tab, newline etc) with the delimiter
-			$string = preg_replace('/[\s]+/', $delim, $string);
-
-			// Find all legal characters
-			preg_match_all('/[^<>?@:!-\/\[-`ëí;‘’…]+/u', $string, $matches);
-			
-			// Join only legal character with the $delim
-			$string = implode($delim, $matches[0]);
-			
-			// Allow for custom rules
-			if(is_array($additional_rule_set) && !empty($additional_rule_set)){
-				foreach($additional_rule_set as $rule => $replacement) $string = preg_replace($rule, $replacement, $string);
-			}
-			
-			// Remove leading or trailing delim characters
-			$string = trim($string, $delim);
-				
-			// Encode it for URI use
-			if($uriencode) $string = urlencode($string);	
-					
-			// Make it lowercase
-			$string = strtolower($string);		
-
-			return $string;
-			
-		}
-		
-		/**
-		 * Create filename
+		 *  	array(
+		 *  		[...]
 		 *
-		 * Given a string, this will clean it for use as a filename. 
-		 * Preserves multi-byte characters.
-		 * @param string $string string to clean
-		 * @param string $delim replacement for invalid characters
-		 * @param boolean $apply_transliteration if true, umlauts and special characters will be substituted
-		 * @return string created filename
+		 *  		'en' => array(
+		 *  			'name' => 'English',
+		 *  			'handle' => 'english',
+		 *  			'extensions' => array()
+		 *  		),
+		 *
+		 *  		'it' => array(
+		 *  			'name' => 'Italiano',
+		 *  			'handle' => 'italian',
+		 *  			'extensions' => array(
+		 *  				[...]
+		 *  			)
+		 *  		),
+		 *
+		 *  		[...]
+		 *  	)
+		 *
+		 * @see toolkit.Lang#createLanguage()
+		 * @since Symphony 2.3
+		 * @return array
+		 *  Return an array of languages (both enabled and disabled)
 		 */
-		public static function createFilename($string, $delim='-', $apply_transliteration=true) {
-
-			// Use the transliteration table if provided
-			if($apply_transliteration == true) $string = _t($string);
-
-			// Strip out any tag
-			$string = strip_tags($string);
-
-			// Find all legal characters
-			$count = preg_match_all('/[\p{L}\w:;.,+=~]+/u', $string, $matches);
-			if($count <= 0 || $count == false){
-				preg_match_all('/[\w:;.,+=~]+/', $string, $matches);
-			}
-
-			// Join only legal character with the $delim
-			$string = implode($delim, $matches[0]);
-			
-			// Remove leading or trailing delim characters
-			$string = trim($string, $delim);
-			
-			// Make it lowercase
-			$string = strtolower($string);
-			
-			return $string;
-
+		public static function Languages() {
+			return self::$_languages;
 		}
-		
+
 		/**
-		 * Get browser languages
+		 * Get transliterations
 		 *
-		 * Return languages accepted by browser as an array sorted by priority
-		 * @return array language codes, e. g. 'en'
-		 */	 
-		public static function getBrowserLanguages() {
-			static $languages;
-			if(is_array($languages)) return $languages;
-
-			$languages = array();
-
-			if(strlen(trim($_SERVER['HTTP_ACCEPT_LANGUAGE'])) < 1) return $languages;
-			if(!preg_match_all('/(\w+(?:-\w+)?,?)+(?:;q=(?:\d+\.\d+))?/', preg_replace('/\s+/', '', $_SERVER['HTTP_ACCEPT_LANGUAGE']), $matches)) return $languages;
-
-			$priority = 1.0;
-			$languages = array();
-			foreach($matches[0] as $def){
-				list($list, $q) = explode(';q=', $def);
-				if(!empty($q)) $priority=floatval($q);
-				$list = explode(',', $list);
-				foreach($list as $lang){
-					$languages[$lang] = $priority;
-					$priority -= 0.000000001;
-				}
-			}
-			arsort($languages);
-			$languages = array_keys($languages);
-			// return list sorted by descending priority, e.g., array('en-gb','en');
-			return $languages;
-		}
-
-		/**
-         * Get codes of available languages
-         *
-		 * Return all available languages (core and extensions)
-		 * @return array language codes, e. g. 'en'
+		 * @return array
+		 *  Returns the transliterations array
 		 */
-		public static function getAvailableLanguages($ExtensionManager=false) {
-			$languages = array();
-			// Get core translation files
-			$languages = self::getLanguageCodes(LIBRARY . '/lang', $languages);
-			// Get extension translation files
-			if($ExtensionManager) {
-				foreach ($ExtensionManager->listAll() as $extension => $about) {
-					$path = EXTENSIONS . '/' . $about['handle'] . '/lang';
-					if(file_exists($path)) $languages = self::getLanguageCodes($path, $languages);
-				}
-			}
-			// Return languages codes	
-			return $languages;
+		public static function Transliterations() {
+			return self::$_transliterations;
 		}
-		
+
 		/**
-		 * Get languages
+		 * Initialize transliterations, datetime dictionary and languages array.
+		 */
+		public static function initialize() {
+			self::$_dictionary = array();
+
+			// Load default datetime strings
+			if(empty(self::$_datetime_dictionary)) {
+				include(LANG . '/datetime.php');
+
+				self::$_datetime_dictionary = $datetime_strings;
+			}
+
+			// Load default transliterations
+			if(empty(self::$_transliterations)) {
+				include(LANG . '/transliterations.php');
+
+				self::$_transliterations = $transliterations;
+			}
+
+			// Load default English language
+			if(empty(self::$_languages)) {
+				self::$_languages = self::createLanguage('en', 'English', 'english');
+			}
+
+			// Fetch all available languages
+			self::fetch();
+		}
+
+		/**
+		 * Create an array of Language information for internal use.
 		 *
-		 * Extract language codes and files
-		 * @return array language codes and files
+		 * @since Symphony 2.3
+		 * @param string $code
+		 *  Language code, e. g. 'en' or 'pt-br'
+		 * @param string $name
+		 *  Language name
+		 * @param string $handle (optional)
+		 *  Handle for the given language, used to build a valid 'lang_$handle' extension's handle.
+		 *  Defaults to null.
+		 * @param array $extensions (optional)
+		 *  An array of extensions that support the given language.
+		 * @return array
+		 *  An array of Language information.
 		 */
-		public static function getLanguageCodes($path, $languages) {
-			$iterator = new DirectoryIterator($path);
-			foreach($iterator as $file) {
-				if(!$file->isDot() && preg_match('/^lang\.(\w+(-\w+)?)\.php$/', $file->getFilename(), $matches)) {
-					if(!isset($languages[$matches[1]])) {
+		private static function createLanguage($code, $name, $handle = null, array $extensions = array()) {
+			return array(
+				$code => array(
+					'name' => $name,
+					'handle' => $handle,
+					'extensions' => $extensions
+				)
+			);
+		}
+
+		/**
+		 * Fetch all languages available in the core language folder and the language extensions.
+		 * The function stores all language information in the private variable `$_languages`.
+		 * It contains an array with the name and handle of each language and an array of all
+		 * extensions available in that language.
+		 *
+		 * @throws UnexpectedValueException
+		 * @throws RuntimeException
+		 */
+		private static function fetch() {
+			// Fetch extensions
+			$extensions = new DirectoryIterator(EXTENSIONS);
+
+			// Language extensions
+			foreach($extensions as $extension) {
+				if($extension->isDot() || $extension->isFile()) continue;
+
+				// Core translations
+				$core_handle = (strpos($extension->getFilename(), 'lang_') !== false)
+					? str_replace('lang_', '', $extension->getFilename())
+					: null;
+
+				// Loop over the `/lang` directory of this `$extension` searching for language
+				// files. If `/lang` isn't a directory, `UnexpectedValueException` will be
+				// thrown.
+				try {
+					$directory = new DirectoryIterator($extension->getPathname() . '/lang');
+					foreach($directory as $file) {
+						if ($file->isDot() || !preg_match('/\.php$/', $file->getPathname())) continue;
+
 						include($file->getPathname());
-						$languages[$matches[1]] = $about['name'];
+
+						// Get language code
+						$code = explode('.', $file);
+						$code = $code[1];
+						$lang = self::$_languages[$code];
+
+						// Available extensions
+						$extensions = (isset($lang)) ? $lang['extensions'] : array();
+
+						// Core translations
+						if($core_handle){
+							$handle = $core_handle;
+						}
+						// Extension translations
+						else {
+							$handle = (isset($lang)) ? $lang['handle'] : null;
+							$extensions = array_merge(array($extension->getFilename()), $extensions);
+						}
+
+						// Merge languages ($about is declared inside the included $file)
+						$temp = self::createLanguage($code, $about['name'], $handle, $extensions);
+
+						if(isset($lang)){
+							foreach($lang as $key => $value){
+								// Prevent missing or nulled values overwriting existing values
+								// which can occur if a translation file is not correct.
+								if(!isset($temp[$code][$key]) || empty($temp[$code][$key])) continue;
+
+								self::$_languages[$code][$key] = $temp[$code][$key];
+							}
+						}
+						else {
+							self::$_languages[$code] = $temp[$code];
+						}
 					}
 				}
+				catch (UnexpectedValueException $ex) {
+					continue;
+				}
+				catch (RuntimeException $ex) {
+					continue;
+				}
 			}
+		}
+
+		/**
+		 * Set system language, load translations for core and extensions. If the specified language
+		 * cannot be found, Symphony will default to English.
+		 *
+		 * Note: Beginning with Symphony 2.2 translations bundled with extensions will only be loaded
+		 * when the core dictionary of the specific language is available.
+		 *
+		 * @param string $code
+		 *  Language code, e. g. 'en' or 'pt-br'
+		 * @param boolean $checkStatus (optional)
+		 *  If false, set the language even if it's not enabled. Defaults to true.
+		 */
+		public static function set($code, $checkStatus = true) {
+			if(!$code || $code == self::get()) return;
+
+			// Store current language code
+			self::$_lang = $code;
+
+			// Clear dictionary
+			self::$_dictionary = array();
+
+			// Language file available
+			if($code != 'en' && (self::isLanguageEnabled($code) || $checkStatus == false)) {
+				// Load core translations
+				self::load(vsprintf('%s/lang_%s/lang/lang.%s.php', array(
+					EXTENSIONS, self::$_languages[$code]['handle'], $code
+				)));
+
+				// Load extension translations
+				foreach(self::$_languages[$code]['extensions'] as $extension) {
+					self::load(vsprintf('%s/%s/lang/lang.%s.php', array(
+						EXTENSIONS, $extension, $code
+					)));
+				}
+			}
+
+			// Language file unavailable, use default language
+			else {
+				self::$_lang = 'en';
+
+				include(LANG . '/transliterations.php');
+				self::$_transliterations = $transliterations;
+
+				// Log error, if possible
+				if($code != 'en' && class_exists('Symphony') && Symphony::Log() instanceof Log) {
+					Symphony::Log()->pushToLog(
+						__('The selected language, %s, could not be found. Using default English dictionary instead.', array($code)),
+						E_ERROR,
+						true
+					);
+				}
+			}
+		}
+
+		/**
+		 * Given a valid language code, this function checks if the language is enabled.
+		 *
+		 * @since Symphony 2.3
+		 * @param string $code
+		 *  Language code, e. g. 'en' or 'pt-br'
+		 * @return boolean
+		 *  If true, the language is enabled.
+		 */
+		public static function isLanguageEnabled($code) {
+			if($code == 'en') return true;
+
+			$handle = (isset(self::$_languages[$code])) ? self::$_languages[$code]['handle'] : '';
+			$enabled_extensions = array();
+
+			// Fetch list of active extensions
+			if(class_exists('Symphony') && (!is_null(Symphony::ExtensionManager()))){
+				$enabled_extensions = Symphony::ExtensionManager()->listInstalledHandles();
+			}
+
+			return in_array('lang_' . $handle, $enabled_extensions);
+		}
+
+		/**
+		 * Load language file. Each language file contains three arrays:
+		 * about, dictionary and transliterations.
+		 *
+		 * @param string $path
+		 *  Path of the language file that should be loaded
+		 */
+		private static function load($path) {
+			// Load language file
+			if(file_exists($path)) {
+				require($path);
+			}
+
+			// Populate dictionary ($dictionary is declared inside $path)
+			if(isset($dictionary) && is_array($dictionary)) {
+				self::$_dictionary = array_merge(self::$_dictionary, $dictionary);
+			}
+
+			// Populate transliterations ($transliterations is declared inside $path)
+			if(isset($transliterations) && is_array($transliterations)) {
+				self::$_transliterations = array_merge(self::$_transliterations, $transliterations);
+			}
+		}
+
+		/**
+		 * Get current language
+		 *
+		 * @return string
+		 */
+		public static function get() {
+			return self::$_lang;
+		}
+
+		/**
+		 * This function is an internal alias for `__()`.
+		 *
+		 * @since Symphony 2.3
+		 * @see toolkit.__()
+		 * @param string $string
+		 *  The string that should be translated
+		 * @param array $inserts (optional)
+		 *  Optional array used to replace translation placeholders, defaults to NULL
+		 * @param string $namespace (optional)
+		 *  Optional string used to define the namespace, defaults to NULL.
+		 * @return string
+		 *  Returns the translated string
+		 */
+		public static function translate($string, array $inserts = null, $namespace = null) {
+			if(is_null($namespace) && class_exists('Symphony')){
+				$namespace = Symphony::getPageNamespace();
+			}
+
+			if(isset($namespace) && isset(self::$_dictionary[$namespace][$string])) {
+				$translated = self::$_dictionary[$namespace][$string];
+			}
+			else if(isset(self::$_dictionary[$string])) {
+				$translated = self::$_dictionary[$string];
+			}
+			else {
+				$translated = $string;
+			}
+
+			$translated = empty($translated) ? $string : $translated;
+
+			// Replace translation placeholders
+			if(is_array($inserts) && !empty($inserts)) {
+				$translated = vsprintf($translated, $inserts);
+			}
+
+			return $translated;
+		}
+
+		/**
+		 * Get an array of the codes and names of all languages that are available system wide.
+		 *
+		 * Note: Beginning with Symphony 2.2 language files are only available
+		 * when the language extension is explicitly enabled.
+		 *
+		 * @param boolean $checkStatus (optional)
+		 *  If false, retrieves a list a languages that support core translation.
+		 * @return array
+		 *  Returns an associative array of language codes and names, e. g. 'en' => 'English'
+		 */
+		public static function getAvailableLanguages($checkStatus = true) {
+			$languages = array();
+
+			// Get available languages
+			foreach(self::$_languages as $key => $language) {
+				if(self::isLanguageEnabled($key) || ($checkStatus == false && isset($language['handle']))){
+					$languages[$key] = $language['name'];
+				}
+			}
+
+			// Return languages codes
 			return $languages;
 		}
-		
+
+		/**
+		 * Check if Symphony is localised.
+		 *
+		 * @return boolean
+		 *  Returns true for localized system, false for English system
+		 */
+		public static function isLocalized() {
+			return (self::get() != 'en');
+		}
+
+		/**
+		 * Localize dates.
+		 *
+		 * @param string $string
+		 *  Standard date that should be localized
+		 * @return string
+		 *  Return the given date with translated month and day names
+		 */
+		public static function localizeDate($string) {
+			// Only translate dates in localized environments
+			if(self::isLocalized()) {
+				foreach(self::$_datetime_dictionary as $value) {
+					$string = preg_replace('/\b' . $value . '\b/i', self::translate($value), $string);
+				}
+			}
+
+			return $string;
+		}
+
+		/**
+		 * Standardize dates.
+		 *
+		 * @param string $string
+		 *  Localized date that should be standardized
+		 * @return string
+		 *  Returns the given date with English month and day names
+		 */
+		public static function standardizeDate($string) {
+			// Only standardize dates in localized environments
+			if(self::isLocalized()) {
+
+				// Translate names to English
+				foreach(self::$_datetime_dictionary as $values) {
+					$string = preg_replace('/\b' . self::translate($values) . '\b/i' . (self::isUnicodeCompiled() == true ? 'u' : null), $values, $string);
+				}
+
+				// Replace custom date and time separator with space:
+				// This is important, otherwise the `DateTime` constructor may break
+				// @todo Test if this separator is still required. It's a hidden setting
+				// and users are only aware of it if they go digging/pointed in the right direction
+				$separator = Symphony::Configuration()->get('datetime_separator', 'region');
+				if($separator != ' ') {
+					$string = str_replace($separator, ' ', $string);
+				}
+			}
+
+			return $string;
+		}
+
+		/**
+		 * Given a string, this will clean it for use as a Symphony handle. Preserves multi-byte characters.
+		 *
+		 * @param string $string
+		 *  String to be cleaned up
+		 * @param int $max_length
+		 *  The maximum number of characters in the handle
+		 * @param string $delim
+		 *  All non-valid characters will be replaced with this
+		 * @param boolean $uriencode
+		 *  Force the resultant string to be uri encoded making it safe for URLs
+		 * @param boolean $apply_transliteration
+		 *  If true, this will run the string through an array of substitution characters
+		 * @param array $additional_rule_set
+		 *  An array of REGEX patterns that should be applied to the `$string`. This
+		 *  occurs after the string has been trimmed and joined with the `$delim`
+		 * @return string
+		 *  Returns resultant handle
+		 */
+		public static function createHandle($string, $max_length = 255, $delim = '-', $uriencode = false, $apply_transliteration = true, $additional_rule_set = NULL) {
+			// Use the transliteration table if provided
+			if($apply_transliteration == true){
+				$string = self::applyTransliterations($string);
+			}
+
+			return General::createHandle($string, $max_length, $delim, $uriencode, $additional_rule_set);
+		}
+
+		/**
+		 * Given a string, this will clean it for use as a filename. Preserves multi-byte characters.
+		 *
+		 * @param string $string
+		 *  String to be cleaned up
+		 * @param string $delim
+		 *  Replacement for invalid characters
+		 * @param boolean $apply_transliteration
+		 *  If true, umlauts and special characters will be substituted
+		 * @return string
+		 *  Returns created filename
+		 */
+		public static function createFilename($string, $delim='-', $apply_transliteration = true) {
+			// Use the transliteration table if provided
+			if($apply_transliteration == true){
+				$string = self::applyTransliterations($string);
+			}
+
+			return General::createFilename($string, $delim);
+		}
+
+		/**
+		 * This function replaces special characters according to the values stored inside
+		 * `$_transliterations`.
+		 *
+		 * @since Symphony 2.3
+		 * @param string $string
+		 *  The string that should be cleaned-up
+		 * @return
+		 *  Returns the transliterated string
+		 */
+		private static function applyTransliterations($string) {
+			// Apply the straight transliterations with strtr as it's much faster
+			$string = strtr($string, self::$_transliterations['straight']);
+
+			// Apply the regex rules over the resulting $string
+			return preg_replace(
+				array_keys(self::$_transliterations['regexp']),
+				array_values(self::$_transliterations['regexp']),
+				$string
+			);
+		}
+
+		/**
+		 * Returns boolean if PHP has been compiled with unicode support. This is
+		 * useful to determine if unicode modifier's can be used in regular expression's
+		 *
+		 * @link http://stackoverflow.com/questions/4509576/detect-if-pcre-was-built-without-the-enable-unicode-properties-or-enable-utf8
+		 * @since Symphony 2.2.2
+		 * @return boolean
+		 */
+		public static function isUnicodeCompiled() {
+			return (@preg_match('/\pL/u', 'a') == 1 ? true : false);
+		}
+
 	}
-	
+
+	/**
+	 * Status when a language is installed and enabled (will be removed in Symphony 2.4)
+	 * @deprecated
+	 * @var integer
+	 */
+	define_safe('LANGUAGE_ENABLED', 10);
+
+	/**
+	 * Status when a language is disabled (will be removed in Symphony 2.4)
+	 * @deprecated
+	 * @var integer
+	 */
+	define_safe('LANGUAGE_DISABLED', 11);

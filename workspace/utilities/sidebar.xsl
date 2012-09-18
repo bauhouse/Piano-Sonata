@@ -61,7 +61,7 @@
 				<p>I'm on the web, visit me at</p>
 				<div id="links">
 					<ul>
-						<xsl:for-each select="//external-links/entry">
+						<xsl:for-each select="//external-links/item">
 							<li><a href="{link}"><xsl:value-of select="title"/></a></li>
 						</xsl:for-each>
 					</ul>

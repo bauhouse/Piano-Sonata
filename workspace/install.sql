@@ -21,11 +21,11 @@ CREATE TABLE`tbl_fields_checkbox` (
   `default_state` enum('on','off') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'on',
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=42 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=44 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_checkbox` ***
-INSERT INTO`tbl_fields_checkbox` (`id`, `field_id`, `default_state`) VALUES (40, 5, 'off');
-INSERT INTO`tbl_fields_checkbox` (`id`, `field_id`, `default_state`) VALUES (41, 43, 'on');
+INSERT INTO`tbl_fields_checkbox` (`id`, `field_id`, `default_state`) VALUES (42, 5, 'off');
+INSERT INTO`tbl_fields_checkbox` (`id`, `field_id`, `default_state`) VALUES (43, 43, 'on');
 
 -- *** STRUCTURE: `sym_fields_date` ***
 DROP TABLE IF EXISTS`tbl_fields_date`;
@@ -35,10 +35,10 @@ CREATE TABLE`tbl_fields_date` (
   `pre_populate` enum('yes','no') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=33 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=34 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_date` ***
-INSERT INTO`tbl_fields_date` (`id`, `field_id`, `pre_populate`) VALUES (32, 29, 'yes');
+INSERT INTO`tbl_fields_date` (`id`, `field_id`, `pre_populate`) VALUES (33, 29, 'yes');
 INSERT INTO`tbl_fields_date` (`id`, `field_id`, `pre_populate`) VALUES (3, 13, 'yes');
 
 -- *** STRUCTURE: `sym_fields_input` ***
@@ -49,10 +49,10 @@ CREATE TABLE`tbl_fields_input` (
   `validator` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=50 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=51 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_input` ***
-INSERT INTO`tbl_fields_input` (`id`, `field_id`, `validator`) VALUES (49, 1, NULL);
+INSERT INTO`tbl_fields_input` (`id`, `field_id`, `validator`) VALUES (50, 1, NULL);
 INSERT INTO`tbl_fields_input` (`id`, `field_id`, `validator`) VALUES (2, 6, NULL);
 INSERT INTO`tbl_fields_input` (`id`, `field_id`, `validator`) VALUES (3, 10, NULL);
 INSERT INTO`tbl_fields_input` (`id`, `field_id`, `validator`) VALUES (4, 11, '/^\\w(?:\\.?[\\w%+-]+)*@\\w(?:[\\w-]*\\.)+?[a-z]{2,}$/i');
@@ -90,11 +90,11 @@ CREATE TABLE`tbl_fields_selectbox_link` (
   `show_association` enum('yes','no') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'yes',
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=49 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=50 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_selectbox_link` ***
 INSERT INTO`tbl_fields_selectbox_link` (`id`, `field_id`, `allow_multiple_selection`, `related_field_id`, `limit`, `show_association`) VALUES (1, 14, 'no', 1, 20, 'yes');
-INSERT INTO`tbl_fields_selectbox_link` (`id`, `field_id`, `allow_multiple_selection`, `related_field_id`, `limit`, `show_association`) VALUES (48, 4, 'no', 6, 20, 'yes');
+INSERT INTO`tbl_fields_selectbox_link` (`id`, `field_id`, `allow_multiple_selection`, `related_field_id`, `limit`, `show_association`) VALUES (49, 4, 'yes', 6, 20, 'yes');
 
 -- *** STRUCTURE: `sym_fields_subsectionmanager` ***
 DROP TABLE IF EXISTS`tbl_fields_subsectionmanager`;
@@ -116,10 +116,10 @@ CREATE TABLE`tbl_fields_subsectionmanager` (
   `recursion_levels` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_subsectionmanager` ***
-INSERT INTO`tbl_fields_subsectionmanager` (`id`, `field_id`, `subsection_id`, `filter_tags`, `caption`, `droptext`, `create`, `remove`, `allow_multiple`, `edit`, `sort`, `drop`, `show_search`, `show_preview`, `recursion_levels`) VALUES (1, 44, 5, NULL, '{$description}', '{$description}', 1, 1, 1, 1, 1, 1, 1, 1, 0);
+INSERT INTO`tbl_fields_subsectionmanager` (`id`, `field_id`, `subsection_id`, `filter_tags`, `caption`, `droptext`, `create`, `remove`, `allow_multiple`, `edit`, `sort`, `drop`, `show_search`, `show_preview`, `recursion_levels`) VALUES (4, 44, 5, NULL, '{$description}', '{$description}', 1, 1, 1, 1, 1, 1, 1, 1, 0);
 INSERT INTO`tbl_fields_subsectionmanager` (`id`, `field_id`, `subsection_id`, `filter_tags`, `caption`, `droptext`, `create`, `remove`, `allow_multiple`, `edit`, `sort`, `drop`, `show_search`, `show_preview`, `recursion_levels`) VALUES (3, 45, 9, NULL, '{$title}', NULL, 1, 1, 1, 1, 1, 0, 0, 0, 0);
 
 -- *** STRUCTURE: `sym_fields_subsectiontabs` ***
@@ -145,10 +145,10 @@ CREATE TABLE`tbl_fields_taglist` (
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`),
   KEY `pre_populate_source` (`pre_populate_source`)
-) ENGINE=MyISAM AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=16 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_taglist` ***
-INSERT INTO`tbl_fields_taglist` (`id`, `field_id`, `validator`, `pre_populate_source`) VALUES (14, 40, NULL, 'existing');
+INSERT INTO`tbl_fields_taglist` (`id`, `field_id`, `validator`, `pre_populate_source`) VALUES (15, 40, NULL, 'existing');
 
 -- *** STRUCTURE: `sym_fields_textarea` ***
 DROP TABLE IF EXISTS`tbl_fields_textarea`;
@@ -159,16 +159,16 @@ CREATE TABLE`tbl_fields_textarea` (
   `size` int(3) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=64 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=65 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_textarea` ***
-INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (59, 2, 'markdown_extra_with_smartypants', 20);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (2, 7, 'markdown_extra_with_smartypants', 5);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (62, 33, 'markdown_extra_with_smartypants', 3);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (4, 15, 'markdown_extra_with_smartypants', 8);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (51, 18, NULL, 9);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (6, 22, NULL, 9);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (63, 34, 'markdown_extra_with_smartypants', 15);
+INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (64, 2, 'markdown_extra_with_smartypants', 20);
 
 -- *** STRUCTURE: `sym_fields_uniqueupload` ***
 DROP TABLE IF EXISTS`tbl_fields_uniqueupload`;
@@ -806,6 +806,6 @@ INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `
 
 -- *** DATA: `sym_sections_association` ***
 INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (1, 1, 1, 4, 14, 'no');
-INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (49, 2, 6, 1, 4, 'no');
-INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (48, 1, 44, 5, 44, 'yes');
+INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (53, 2, 6, 1, 4, 'no');
+INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (52, 1, 44, 5, 44, 'yes');
 INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (51, 8, 45, 9, 45, 'yes');

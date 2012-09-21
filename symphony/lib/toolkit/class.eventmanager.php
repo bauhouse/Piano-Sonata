@@ -1,132 +1,186 @@
 <?php
+	/**
+	 * @package toolkit
+	 */
+	/**
+	 * The EventManager class is responsible for managing all Event objects
+	 * in Symphony. Event's are stored on the file system either in the
+	 * /workspace/events folder or provided by an extension in an /events folder.
+	 * Events run from the Frontend usually to add new entries to the system, but
+	 * they are not limited to that facet.
+	 */
 
-	
-	
 	require_once(TOOLKIT . '/class.event.php');
+	require_once(TOOLKIT . '/class.datasourcemanager.php');
 
-    Class EventManager extends Manager{
+	Class EventManager implements FileResource {
 
-	    function __find($name){
-		 
-		    if(@is_file(EVENTS . "/event.$name.php")) return EVENTS;
-			else{	
-				
-				$extensionManager = new ExtensionManager($this->_Parent);
-				$extensions = $extensionManager->listInstalledHandles();
-				
-				if(is_array($extensions) && !empty($extensions)){
-					foreach($extensions as $e){
-						if(@is_file(EXTENSIONS . "/$e/events/event.$name.php")) return EXTENSIONS . "/$e/events";	
-					}	
-				}		    
-	    	}	
-	    		    
-		    return false;
-	    }
-	            
-        function __getClassName($name){
-	        return 'event' . $name;
-        }
-        
-        function __getClassPath($name){
-	        return $this->__find($name);
-        }
-        
-        function __getDriverPath($name){	        
-	        return $this->__getClassPath($name) . "/event.$name.php";
-        }  
- 
-		function __getHandleFromFilename($filename){
+		/**
+		 * Given the filename of an Event return it's handle. This will remove
+		 * the Symphony convention of `event.*.php`
+		 *
+		 * @param string $filename
+		 *  The filename of the Event
+		 * @return string
+		 */
+		public static function __getHandleFromFilename($filename){
 			return preg_replace(array('/^event./i', '/.php$/i'), '', $filename);
 		}
-               
-        function listAll(){
-	        
-			$result = array();
-			$people = array();
-			
-	        $structure = General::listStructure(EVENTS, '/event.[\\w-]+.php/', false, 'ASC', EVENTS);
-	
-	        if(is_array($structure['filelist']) && !empty($structure['filelist'])){		        
-	        	foreach($structure['filelist'] as $f){
-		        	$f = self::__getHandleFromFilename($f); //preg_replace(array('/^event./i', '/.php$/i'), '', $f);					        	
 
-					if($about = $this->about($f)){
+		/**
+		 * Given a name, returns the full class name of an Event. Events
+		 * use an 'event' prefix.
+		 *
+		 * @param string $handle
+		 *  The Event handle
+		 * @return string
+		 */
+		public static function __getClassName($handle){
+			return 'event' . $handle;
+		}
 
-						$classname = $this->__getClassName($f);   
-						$path = $this->__getDriverPath($f);
-						$can_parse = false;
-						$type = NULL;
-								
-						if(is_callable(array($classname,'allowEditorToParse')))
-							$can_parse = @call_user_func(array(&$classname, 'allowEditorToParse'));
-		
-						if(is_callable(array($classname,'getType')))	
-							$type = @call_user_func(array(&$classname, 'getType'));
-							
-						$about['can_parse'] = $can_parse;
-						$about['type'] = $type;
-						$result[$f] = $about;		
-		
+		/**
+		 * Finds an Event by name by searching the events folder in the workspace
+		 * and in all installed extension folders and returns the path to it's folder.
+		 *
+		 * @param string $handle
+		 *  The handle of the Event free from any Symphony conventions
+		 *  such as `event.*.php`
+		 * @return mixed
+		 *  If the Event is found, the function returns the path it's folder, otherwise false.
+		 */
+		public static function __getClassPath($handle){
+			if(is_file(EVENTS . "/event.$handle.php")) return EVENTS;
+			else{
+
+				$extensions = Symphony::ExtensionManager()->listInstalledHandles();
+
+				if(is_array($extensions) && !empty($extensions)){
+					foreach($extensions as $e){
+						if(is_file(EXTENSIONS . "/$e/events/event.$handle.php")) return EXTENSIONS . "/$e/events";
 					}
 				}
 			}
 
-			//$structure = General::listStructure(EXTENSIONS, array(), false, 'ASC', EXTENSIONS);
-			//$extensions = $structure['dirlist'];
-			
-			$extensionManager = new ExtensionManager($this->_Parent);
-			$extensions = $extensionManager->listInstalledHandles();
-			
-			if(is_array($extensions) && !empty($extensions)){
-				foreach($extensions as $e){										
-					
-					if(!is_dir(EXTENSIONS . "/$e/events")) continue;
-					
-					$tmp = General::listStructure(EXTENSIONS . "/$e/events", '/event.[\\w-]+.php/', false, 'ASC', EXTENSIONS . "/$e/events");
-										
-		        	if(is_array($tmp['filelist']) && !empty($tmp['filelist'])){		        
-		        		foreach($tmp['filelist'] as $f){
-							$f = $f = self::__getHandleFromFilename($f);
-							
-							if($about = $this->about($f)){
-								
-								$classname = $this->__getClassName($f);
-									
-								$can_parse = false;
-								$type = NULL;
-																		
-								$about['can_parse'] = $can_parse;
-								$about['type'] = $type;
-								$result[$f] = $about;	
-							}
+			return false;
+		}
 
-						}						
-					}					
-				}	
+		/**
+		 * Given a name, return the path to the Event class
+		 *
+		 * @see toolkit.EventManager#__getClassPath()
+		 * @param string $handle
+		 *  The handle of the Event free from any Symphony conventions
+		 *  such as event.*.php
+		 * @return string
+		 */
+		public static function __getDriverPath($handle){
+			return self::__getClassPath($handle) . "/event.$handle.php";
+		}
+
+		/**
+		 * Finds all available Events by searching the events folder in the workspace
+		 * and in all installed extension folders. Returns an associative array of Events.
+		 *
+		 * @see toolkit.Manager#about()
+		 * @return array
+		 *  Associative array of Events with the key being the handle of the Event
+		 *  and the value being the Event's `about()` information.
+		 */
+		public static function listAll(){
+			$result = array();
+			$structure = General::listStructure(EVENTS, '/event.[\\w-]+.php/', false, 'ASC', EVENTS);
+
+			if(is_array($structure['filelist']) && !empty($structure['filelist'])){
+				foreach($structure['filelist'] as $f){
+					$f = self::__getHandleFromFilename($f);
+
+					if($about = self::about($f)){
+						$classname = self::__getClassName($f);
+						$can_parse = false;
+						$source = null;
+
+						if(method_exists($classname,'allowEditorToParse')) {
+							$can_parse = call_user_func(array($classname, 'allowEditorToParse'));
+						}
+
+						if(method_exists($classname,'getSource')) {
+							$source = call_user_func(array($classname, 'getSource'));
+						}
+
+						$about['can_parse'] = $can_parse;
+						$about['source'] = $source;
+						$result[$f] = $about;
+					}
+				}
 			}
-			
+
+			$extensions = Symphony::ExtensionManager()->listInstalledHandles();
+
+			if(is_array($extensions) && !empty($extensions)){
+				foreach($extensions as $e){
+
+					if(!is_dir(EXTENSIONS . "/$e/events")) continue;
+
+					$tmp = General::listStructure(EXTENSIONS . "/$e/events", '/event.[\\w-]+.php/', false, 'ASC', EXTENSIONS . "/$e/events");
+
+					if(is_array($tmp['filelist']) && !empty($tmp['filelist'])){
+						foreach($tmp['filelist'] as $f){
+							$f = self::__getHandleFromFilename($f);
+
+							if($about = self::about($f)){
+								$about['can_parse'] = false;
+								$result[$f] = $about;
+							}
+						}
+					}
+				}
+			}
+
 			ksort($result);
-			return $result;	        
-        }
-               
-        ##Creates a new extension object and returns a pointer to it
-        function &create($name, $environment=NULL){
-	        	
-	        $classname = $this->__getClassName($name);	        
-	        $path = $this->__getDriverPath($name);
-	        
-	        if(!@is_file($path)){
-		        trigger_error(__('Could not find Event <code>%s</code>. If the Event was provided by an Extensions, ensure that it is installed, and enabled.', array($name)), E_USER_ERROR);	
-		        return false;
-	        }
-	        
-			if(!@class_exists($classname))									
-				require_once($path);
-								
-			return new $classname($this->_Parent, $environment);	
-	        
-        }       
-        
-    }
-    
+			return $result;
+		}
+
+		public static function about($name) {
+			$classname = self::__getClassName($name);
+			$path = self::__getDriverPath($name);
+
+			if(!@file_exists($path)) return false;
+
+			require_once($path);
+
+			$handle = self::__getHandleFromFilename(basename($path));
+
+			if(is_callable(array($classname, 'about'))){
+				$about = call_user_func(array($classname, 'about'));
+				return array_merge($about, array('handle' => $handle));
+			}
+		}
+
+		/**
+		 * Creates an instance of a given class and returns it.
+		 *
+		 * @param string $handle
+		 *  The handle of the Event to create
+		 * @param array $env
+		 *  The environment variables from the Frontend class which includes
+		 *  any params set by Symphony or Datasources or by other Events
+		 * @return Event
+		 */
+		public static function create($handle, array $env = null){
+			$classname = self::__getClassName($handle);
+			$path = self::__getDriverPath($handle);
+
+			if(!is_file($path)){
+				throw new Exception(
+					__('Could not find Event %s.', array('<code>' . $handle . '</code>'))
+					. ' ' . __('If it was provided by an Extension, ensure that it is installed, and enabled.')
+				);
+			}
+
+			if(!class_exists($classname)) require_once($path);
+
+			return new $classname($env);
+		}
+
+	}

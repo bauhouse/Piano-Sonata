@@ -28,3 +28,6 @@
 [submodule "extensions/subsectionmanager"]
 	path = extensions/subsectionmanager
 	url = git://github.com/hananils/subsectionmanager.git
+[submodule "extensions/limit_section_entries"]
+	path = extensions/limit_section_entries
+	url = git://github.com/vlad-ghita/limit_section_entries.git

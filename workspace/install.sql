@@ -116,11 +116,11 @@ CREATE TABLE`tbl_fields_subsectionmanager` (
   `recursion_levels` tinyint(4) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=3 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_subsectionmanager` ***
 INSERT INTO`tbl_fields_subsectionmanager` (`id`, `field_id`, `subsection_id`, `filter_tags`, `caption`, `droptext`, `create`, `remove`, `allow_multiple`, `edit`, `sort`, `drop`, `show_search`, `show_preview`, `recursion_levels`) VALUES (1, 44, 5, NULL, '{$description}', '{$description}', 1, 1, 1, 1, 1, 1, 1, 1, 0);
-INSERT INTO`tbl_fields_subsectionmanager` (`id`, `field_id`, `subsection_id`, `filter_tags`, `caption`, `droptext`, `create`, `remove`, `allow_multiple`, `edit`, `sort`, `drop`, `show_search`, `show_preview`, `recursion_levels`) VALUES (2, 45, 9, NULL, '{$title}', NULL, 1, 1, 1, 1, 1, 0, 0, 0, 0);
+INSERT INTO`tbl_fields_subsectionmanager` (`id`, `field_id`, `subsection_id`, `filter_tags`, `caption`, `droptext`, `create`, `remove`, `allow_multiple`, `edit`, `sort`, `drop`, `show_search`, `show_preview`, `recursion_levels`) VALUES (3, 45, 9, NULL, '{$title}', NULL, 1, 1, 1, 1, 1, 0, 0, 0, 0);
 
 -- *** STRUCTURE: `sym_fields_subsectiontabs` ***
 DROP TABLE IF EXISTS`tbl_fields_subsectiontabs`;
@@ -159,16 +159,16 @@ CREATE TABLE`tbl_fields_textarea` (
   `size` int(3) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=62 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=64 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 -- *** DATA: `sym_fields_textarea` ***
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (59, 2, 'markdown_extra_with_smartypants', 20);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (2, 7, 'markdown_extra_with_smartypants', 5);
+INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (62, 33, 'markdown_extra_with_smartypants', 3);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (4, 15, 'markdown_extra_with_smartypants', 8);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (51, 18, NULL, 9);
 INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (6, 22, NULL, 9);
-INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (60, 33, 'markdown_extra_with_smartypants', 3);
-INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (61, 34, 'markdown_extra_with_smartypants', 15);
+INSERT INTO`tbl_fields_textarea` (`id`, `field_id`, `formatter`, `size`) VALUES (63, 34, 'markdown_extra_with_smartypants', 15);
 
 -- *** STRUCTURE: `sym_fields_uniqueupload` ***
 DROP TABLE IF EXISTS`tbl_fields_uniqueupload`;
@@ -179,11 +179,11 @@ CREATE TABLE`tbl_fields_uniqueupload` (
   `validator` varchar(50) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `field_id` (`field_id`)
-) ENGINE=MyISAM AUTO_INCREMENT=9 DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM AUTO_INCREMENT=10 DEFAULT CHARSET=latin1;
 
 -- *** DATA: `sym_fields_uniqueupload` ***
 INSERT INTO`tbl_fields_uniqueupload` (`id`, `field_id`, `destination`, `validator`) VALUES (5, 32, '/workspace/uploads', '/\\.(?:bmp|gif|jpe?g|png)$/i');
-INSERT INTO`tbl_fields_uniqueupload` (`id`, `field_id`, `destination`, `validator`) VALUES (8, 39, '/workspace/uploads', '/\\.(?:bmp|gif|jpe?g|png)$/i');
+INSERT INTO`tbl_fields_uniqueupload` (`id`, `field_id`, `destination`, `validator`) VALUES (9, 39, '/workspace/uploads', '/\\.(?:bmp|gif|jpe?g|png)$/i');
 
 -- *** STRUCTURE: `sym_fields_upload` ***
 DROP TABLE IF EXISTS`tbl_fields_upload`;
@@ -703,6 +703,7 @@ INSERT INTO`tbl_extensions` (`id`, `name`, `status`, `version`) VALUES (105, 'ma
 INSERT INTO`tbl_extensions` (`id`, `name`, `status`, `version`) VALUES (103, 'profiledevkit', 'enabled', 1.1);
 INSERT INTO`tbl_extensions` (`id`, `name`, `status`, `version`) VALUES (110, 'xssfilter', 'enabled', '1.1.1');
 INSERT INTO`tbl_extensions` (`id`, `name`, `status`, `version`) VALUES (98, 'uniqueuploadfield', 'enabled', 1.7);
+INSERT INTO`tbl_extensions` (`id`, `name`, `status`, `version`) VALUES (112, 'limit_section_entries', 'enabled', '1.0.1');
 INSERT INTO`tbl_extensions` (`id`, `name`, `status`, `version`) VALUES (111, 'subsectionmanager', 'enabled', '3.0beta2');
 
 -- *** DATA: `sym_extensions_delegates` ***
@@ -729,6 +730,11 @@ INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`,
 INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (137, 111, '/blueprints/datasources/', 'DatasourcePreDelete', '__clearSubsectionCache');
 INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (138, 111, '/frontend/', 'DataSourceEntriesBuilt', '__prepareSubsection');
 INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (139, 111, '/publish/', 'Delete', '__deleteTabs');
+INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (140, 112, '/backend/', 'InitaliseAdminPageHead', 'dInitaliseAdminPageHead');
+INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (141, 112, '/backend/', 'AdminPagePreGenerate', 'dAdminPagePreGenerate');
+INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (142, 112, '/blueprints/sections/', 'AddSectionElements', 'dAddSectionElements');
+INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (143, 112, '/blueprints/sections/', 'SectionPreCreate', 'dSaveSectionSettings');
+INSERT INTO`tbl_extensions_delegates` (`id`, `extension_id`, `page`, `delegate`, `callback`) VALUES (144, 112, '/blueprints/sections/', 'SectionPreEdit', 'dSaveSectionSettings');
 
 -- *** DATA: `sym_fields` ***
 INSERT INTO`tbl_fields` (`id`, `label`, `element_name`, `type`, `parent_section`, `required`, `sortorder`, `location`, `show_column`) VALUES (1, 'Title', 'title', 'input', 1, 'yes', 0, 'main', 'yes');
@@ -790,16 +796,16 @@ INSERT INTO`tbl_pages_types` (`id`, `page_id`, `type`) VALUES (686, 80, 403);
 INSERT INTO`tbl_pages_types` (`id`, `page_id`, `type`) VALUES (685, 79, 'hidden');
 
 -- *** DATA: `sym_sections` ***
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (1, 'Articles', 'articles', 0, 26, 'asc', 'no', 'Content');
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (2, 'Categories', 'categories', 1, NULL, 'asc', 'no', 'Content');
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (8, 'About', 'about', 5, NULL, 'asc', 'no', 'About');
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (4, 'Comments', 'comments', 2, NULL, 'asc', 'no', 'Content');
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (5, 'Images', 'images', 3, NULL, 'asc', 'yes', 'Content');
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (6, 'Messages', 'messages', 4, NULL, 'asc', 'no', 'Content');
-INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `navigation_group`) VALUES (9, 'Elsewhere', 'elsewhere', 6, NULL, 'asc', 'yes', 'About');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (1, 'Articles', 'articles', 0, 26, 'asc', 'no', 0, 'Content');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (2, 'Categories', 'categories', 1, NULL, 'asc', 'no', 0, 'Content');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (8, 'About', 'about', 5, NULL, 'asc', 'no', 1, 'About');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (4, 'Comments', 'comments', 2, NULL, 'asc', 'no', 0, 'Content');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (5, 'Images', 'images', 3, NULL, 'asc', 'yes', 0, 'Content');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (6, 'Messages', 'messages', 4, NULL, 'asc', 'no', 0, 'Content');
+INSERT INTO`tbl_sections` (`id`, `name`, `handle`, `sortorder`, `entry_order`, `entry_order_direction`, `hidden`, `max_entries`, `navigation_group`) VALUES (9, 'Elsewhere', 'elsewhere', 6, NULL, 'asc', 'yes', 0, 'About');
 
 -- *** DATA: `sym_sections_association` ***
 INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (1, 1, 1, 4, 14, 'no');
 INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (49, 2, 6, 1, 4, 'no');
 INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (48, 1, 44, 5, 44, 'yes');
-INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (50, 8, 45, 9, 45, 'yes');
+INSERT INTO`tbl_sections_association` (`id`, `parent_section_id`, `parent_section_field_id`, `child_section_id`, `child_section_field_id`, `hide_association`) VALUES (51, 8, 45, 9, 45, 'yes');

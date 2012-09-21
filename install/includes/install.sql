@@ -280,6 +280,7 @@ CREATE TABLE`tbl_sections` (
   `entry_order` varchar(7) COLLATE utf8_unicode_ci DEFAULT NULL,
   `entry_order_direction` enum('asc','desc') COLLATE utf8_unicode_ci DEFAULT 'asc',
   `hidden` enum('yes','no') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'no',
+  `max_entries` int(11) NOT NULL DEFAULT '0',
   `navigation_group` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'Content',
   PRIMARY KEY (`id`),
   UNIQUE KEY `handle` (`handle`)
